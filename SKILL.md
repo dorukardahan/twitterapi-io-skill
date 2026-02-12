@@ -1,1134 +1,3596 @@
 ---
 name: twitterapi-io
-version: 3.0.0
-description: >-
-  Use Twitter/X API via TwitterAPI.io. 52 live endpoints — search, post, like,
-  retweet, follow, DM, communities, webhooks, lists, spaces, profile management.
-  No Twitter developer account needed. Works with any LLM.
+version: 3.1.0
+description: Use Twitter/X API via TwitterAPI.io. 56+ endpoints — search, post, like, retweet, follow, DM, communities, webhooks, lists, spaces, profile management. No Twitter developer account needed. Works with any LLM.
 homepage: https://twitterapi.io
 ---
 
 # TwitterAPI.io — Complete Twitter/X API Reference
 
-Use Twitter/X through [TwitterAPI.io](https://twitterapi.io). This file contains everything you need to construct working API calls.
+Base URL: `https://api.twitterapi.io`  
+Header: `x-api-key: $KEY`
 
 ## Quick Start
 
+### 1) Search tweets
 ```bash
-# 1. Search tweets (read-only, no login needed)
-curl 'https://api.twitterapi.io/twitter/tweet/advanced_search?query=bitcoin&queryType=Latest' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/tweet/advanced_search' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'query=(AI OR Twitter) lang:en' \
+  --data-urlencode 'queryType=Latest'
+```
 
-# 2. Login (required for write actions)
+### 2) Login and post tweet (v2)
+```bash
+# Step A: login
 curl -X POST 'https://api.twitterapi.io/twitter/user_login_v2' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"user_name":"USER","password":"PASS","email":"EMAIL","totp_secret":"2FA_SECRET","proxy":"http://user:pass@host:port"}'
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{"email":"user@example.com","password":"***","two_factor_secret":"***","proxy":"http://user:pass@host:port"}'
 
-# 3. Post tweet (needs login_cookies from step 2)
-curl -X POST 'https://api.twitterapi.io/twitter/tweet' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES_FROM_LOGIN","tweet_text":"Hello world!","proxy":"http://user:pass@host:port"}'
+# Step B: create tweet using returned login_cookies
+curl -X POST 'https://api.twitterapi.io/twitter/create_tweet_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{"login_cookies":"$COOKIES","tweet_text":"Hello from API"}'
 ```
 
----
-
-## Base URL
-
-```
-https://api.twitterapi.io
+### 3) Fetch user profile
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/info' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userName=elonmusk'
 ```
 
 ## Authentication
 
-Every request requires the `x-api-key` header:
+- All endpoints require `x-api-key`.
+- Write/privileged endpoints additionally require `login_cookies` in request body.
+- Standardized field name in this skill: **`login_cookies`** (normalized from `login_cookie` / `auth_session`).
 
-```
-x-api-key: YOUR_API_KEY
-```
+### Login flow
+1. Call `user_login_v2` with credentials.
+2. Read `login_cookies` from response.
+3. Pass `login_cookies` into write endpoints (tweet, like, follow, community ops, profile updates, DM, media).
 
-Get your key: https://twitterapi.io/dashboard ($0.10 free credits, no credit card needed)
-
-## Pricing
-
-| Operation | Cost per call | Notes |
-|-----------|--------------|-------|
-| Tweet search (per page) | $0.00015 | ~20 tweets/page |
-| User profile lookup | $0.00018 | Per user |
-| Followers/following list | $0.00015 | Per page |
-| User tweets/mentions | $0.00015 | Per page |
-| Tweet by ID | $0.00015 | Comma-separated batch supported |
-| Tweet replies | $0.00015 | Per page |
-| Post tweet | $0.003 | Requires login |
-| Delete tweet | $0.002 | Requires login |
-| Like/Unlike tweet | $0.002 | Requires login |
-| Retweet | $0.002 | Requires login |
-| Follow/Unfollow | $0.002 | Requires login |
-| Send DM | $0.003 | Requires login |
-| Upload media | $0.003 | multipart/form-data |
-| Update profile/avatar/banner | $0.003 | Requires login |
-| Login | $0.003 | Returns cookies |
-| Get article | 100 credits | Long-form Twitter articles |
-| Verified followers | $0.0003 | Per page |
-| Communities | $0.002 | Write actions |
-| Webhooks | Varies | See endpoint details |
-
-Minimum charge: $0.00015 per request, even if no data returned.
-
-## Rate Limits
-
-| Plan | QPS (queries/sec) |
-|------|--------------------|
-| Free tier | 1 req / 5 seconds |
-| $10/mo | 3/s |
-| $50/mo | 6/s |
-| $100/mo | 10/s |
-| $500/mo | 20/s |
-
-Rate limits are per API key, across all endpoints.
-
-## Pagination
-
-Most list endpoints use cursor-based pagination:
-
-```json
-{
-  "has_next_page": true,
-  "next_cursor": "DAABCgABGRT..."
-}
-```
-
-To get the next page, pass `cursor=<next_cursor>` as a query parameter. Continue until `has_next_page` is `false` or `next_cursor` is empty.
-
-Page sizes vary by endpoint (typically 20 items).
+### Auth matrix (summary)
+- `api_key` only: search/read/listing endpoints.
+- `api_key + login_cookies`: v2 write endpoints and account actions.
 
 ## Error Handling
+- **401** invalid API key or expired `login_cookies`
+- **403** forbidden/account restriction/action disallowed
+- **429** throttle; backoff and honor retry windows
+- **500** transient upstream issue; exponential retry
 
-All responses include `status` and `msg` (or `message`) fields:
+## Rate Limits & QPS
+- Free: 1 request / 5 seconds
+- Paid: 3–20 QPS based on credit tier
 
+## Endpoint Reference
+
+## Search & Tweets
+
+### tweet_advanced_search
+- **Description:** Advanced search for tweets.Each page returns up to 20 replies(Sometimes less than 20,because we will filter out ads or other not  tweets). Use cursor for pagination.
+- **Method + Path:** `GET /twitter/tweet/advanced_search`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweet/advanced_search' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'query=elon' \
+  --data-urlencode 'queryType=Latest' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, has_next_page, next_cursor.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+- **Full response schema (live docs):**
 ```json
-{"status": "success", "msg": ""}
-{"status": "error", "msg": "Invalid API key"}
+{
+  "type": "object",
+  "properties": {
+    "tweets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "tweet"
+            ],
+            "uniqueKey": "tweets.items.[INDEX].type",
+            "typeLabel": "enum<string>"
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the tweet",
+            "uniqueKey": "tweets.items.[INDEX].id",
+            "typeLabel": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the tweet",
+            "uniqueKey": "tweets.items.[INDEX].url",
+            "typeLabel": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text of the tweet",
+            "uniqueKey": "tweets.items.[INDEX].text",
+            "typeLabel": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the tweet.eg. \"Twitter for iPhone\"",
+            "uniqueKey": "tweets.items.[INDEX].source",
+            "typeLabel": "string"
+          },
+          "retweetCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been retweeted",
+            "uniqueKey": "tweets.items.[INDEX].retweetCount",
+            "typeLabel": "integer"
+          },
+          "replyCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been replied to",
+            "uniqueKey": "tweets.items.[INDEX].replyCount",
+            "typeLabel": "integer"
+          },
+          "likeCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been liked",
+            "uniqueKey": "tweets.items.[INDEX].likeCount",
+            "typeLabel": "integer"
+          },
+          "quoteCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been quoted",
+            "uniqueKey": "tweets.items.[INDEX].quoteCount",
+            "typeLabel": "integer"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been viewed",
+            "uniqueKey": "tweets.items.[INDEX].viewCount",
+            "typeLabel": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the tweet was created.eg. Tue Dec 10 07:00:30 +0000 2024",
+            "uniqueKey": "tweets.items.[INDEX].createdAt",
+            "typeLabel": "string"
+          },
+          "lang": {
+            "type": "string",
+            "description": "The language of the tweet.eg. \"en\".may be empty",
+            "uniqueKey": "tweets.items.[INDEX].lang",
+            "typeLabel": "string"
+          },
+          "bookmarkCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been bookmarked",
+            "uniqueKey": "tweets.items.[INDEX].bookmarkCount",
+            "typeLabel": "integer"
+          },
+          "isReply": {
+            "type": "boolean",
+            "description": "Indicates if the tweet is a reply",
+            "uniqueKey": "tweets.items.[INDEX].isReply",
+            "typeLabel": "boolean"
+          },
+          "inReplyToId": {
+            "type": "string",
+            "description": "The ID of the tweet being replied to.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].inReplyToId",
+            "typeLabel": "string"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "The ID of the conversation the tweet is part of.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].conversationId",
+            "typeLabel": "string"
+          },
+          "displayTextRange": {
+            "type": "array",
+            "description": "specifies the UTF-16 code unit indices in full_text that define the visible portion of a Tweet.eg\"@jack Thanks for the update!\",display_text_range is [6, 28]",
+            "items": {
+              "type": "integer",
+              "uniqueKey": "tweets.items.[INDEX].displayTextRange.items.[INDEX]",
+              "typeLabel": "integer"
+            },
+            "uniqueKey": "tweets.items.[INDEX].displayTextRange",
+            "typeLabel": "integer[]"
+          },
+          "inReplyToUserId": {
+            "type": "string",
+            "description": "The ID of the user being replied to.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].inReplyToUserId",
+            "typeLabel": "string"
+          },
+          "inReplyToUsername": {
+            "type": "string",
+            "description": "The username of the user being replied to.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].inReplyToUsername",
+            "typeLabel": "string"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "user"
+                ],
+                "uniqueKey": "tweets.items.[INDEX].author.type",
+                "typeLabel": "enum<string>"
+              },
+              "userName": {
+                "type": "string",
+                "description": "The username of the Twitter user",
+                "uniqueKey": "tweets.items.[INDEX].author.userName",
+                "typeLabel": "string"
+              },
+              "url": {
+                "type": "string",
+                "description": "The x.com URL of the user's profile",
+                "uniqueKey": "tweets.items.[INDEX].author.url",
+                "typeLabel": "string"
+              },
+              "id": {
+                "type": "string",
+                "description": "The unique identifier of the user",
+                "uniqueKey": "tweets.items.[INDEX].author.id",
+                "typeLabel": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "The display name of the user",
+                "uniqueKey": "tweets.items.[INDEX].author.name",
+                "typeLabel": "string"
+              },
+              "isBlueVerified": {
+                "type": "boolean",
+                "description": "Whether the user has Twitter Blue verification",
+                "uniqueKey": "tweets.items.[INDEX].author.isBlueVerified",
+                "typeLabel": "boolean"
+              },
+              "verifiedType": {
+                "type": "string",
+                "description": "The type of verification. eg. \"government\" ,can be empty",
+                "uniqueKey": "tweets.items.[INDEX].author.verifiedType",
+                "typeLabel": "string"
+              },
+              "profilePicture": {
+                "type": "string",
+                "description": "URL of the user's profile picture",
+                "uniqueKey": "tweets.items.[INDEX].author.profilePicture",
+                "typeLabel": "string"
+              },
+              "coverPicture": {
+                "type": "string",
+                "description": "URL of the user's cover picture",
+                "uniqueKey": "tweets.items.[INDEX].author.coverPicture",
+                "typeLabel": "string"
+              },
+              "description": {
+                "type": "string",
+                "description": "The user's profile description",
+                "uniqueKey": "tweets.items.[INDEX].author.description",
+                "typeLabel": "string"
+              },
+              "location": {
+                "type": "string",
+                "description": "The user's location.for example: 東京の端っこ . may be empty",
+                "uniqueKey": "tweets.items.[INDEX].author.location",
+                "typeLabel": "string"
+              },
+              "followers": {
+                "type": "integer",
+                "description": "Number of followers",
+                "uniqueKey": "tweets.items.[INDEX].author.followers",
+                "typeLabel": "integer"
+              },
+              "following": {
+                "type": "integer",
+                "description": "Number of accounts following",
+                "uniqueKey": "tweets.items.[INDEX].author.following",
+                "typeLabel": "integer"
+              },
+              "canDm": {
+                "type": "boolean",
+                "description": "Whether the user can receive DMs",
+                "uniqueKey": "tweets.items.[INDEX].author.canDm",
+                "typeLabel": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "When the account was created.for example: Thu Dec 13 08:41:26 +0000 2007",
+                "uniqueKey": "tweets.items.[INDEX].author.createdAt",
+                "typeLabel": "string"
+              },
+              "favouritesCount": {
+                "type": "integer",
+                "description": "Number of favorites",
+                "uniqueKey": "tweets.items.[INDEX].author.favouritesCount",
+                "typeLabel": "integer"
+              },
+              "hasCustomTimelines": {
+                "type": "boolean",
+                "description": "Whether the user has custom timelines",
+                "uniqueKey": "tweets.items.[INDEX].author.hasCustomTimelines",
+                "typeLabel": "boolean"
+              },
+              "isTranslator": {
+                "type": "boolean",
+                "description": "Whether the user is a translator",
+                "uniqueKey": "tweets.items.[INDEX].author.isTranslator",
+                "typeLabel": "boolean"
+              },
+              "mediaCount": {
+                "type": "integer",
+                "description": "Number of media posts",
+                "uniqueKey": "tweets.items.[INDEX].author.mediaCount",
+                "typeLabel": "integer"
+              },
+              "statusesCount": {
+                "type": "integer",
+                "description": "Number of status updates",
+                "uniqueKey": "tweets.items.[INDEX].author.statusesCount",
+                "typeLabel": "integer"
+              },
+              "withheldInCountries": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "tweets.items.[INDEX].author.withheldInCountries.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "Countries where the account is withheld",
+                "uniqueKey": "tweets.items.[INDEX].author.withheldInCountries",
+                "typeLabel": "string[]"
+              },
+              "affiliatesHighlightedLabel": {
+                "type": "object",
+                "uniqueKey": "tweets.items.[INDEX].author.affiliatesHighlightedLabel",
+                "typeLabel": "object"
+              },
+              "possiblySensitive": {
+                "type": "boolean",
+                "description": "Whether the account may contain sensitive content",
+                "uniqueKey": "tweets.items.[INDEX].author.possiblySensitive",
+                "typeLabel": "boolean"
+              },
+              "pinnedTweetIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "tweets.items.[INDEX].author.pinnedTweetIds.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "IDs of pinned tweets",
+                "uniqueKey": "tweets.items.[INDEX].author.pinnedTweetIds",
+                "typeLabel": "string[]"
+              },
+              "isAutomated": {
+                "type": "boolean",
+                "description": "Whether the account is automated",
+                "uniqueKey": "tweets.items.[INDEX].author.isAutomated",
+                "typeLabel": "boolean"
+              },
+              "automatedBy": {
+                "type": "string",
+                "description": "The account that automated the account",
+                "uniqueKey": "tweets.items.[INDEX].author.automatedBy",
+                "typeLabel": "string"
+              },
+              "unavailable": {
+                "type": "boolean",
+                "description": "Whether the account is unavailable",
+                "uniqueKey": "tweets.items.[INDEX].author.unavailable",
+                "typeLabel": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "description": "The message of the account.eg. \"This account is unavailable\" or \"This account is suspended\"",
+                "uniqueKey": "tweets.items.[INDEX].author.message",
+                "typeLabel": "string"
+              },
+              "unavailableReason": {
+                "type": "string",
+                "description": "The reason the account is unavailable.eg. \"suspended\" ",
+                "uniqueKey": "tweets.items.[INDEX].author.unavailableReason",
+                "typeLabel": "string"
+              },
+              "profile_bio": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.description",
+                    "typeLabel": "string"
+                  },
+                  "entities": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description",
+                        "typeLabel": "object"
+                      },
+                      "url": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url",
+                        "typeLabel": "object"
+                      }
+                    },
+                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities",
+                    "typeLabel": "object"
+                  }
+                },
+                "uniqueKey": "tweets.items.[INDEX].author.profile_bio",
+                "typeLabel": "object"
+              }
+            },
+            "description": "The user who posted the tweet",
+            "uniqueKey": "tweets.items.[INDEX].author",
+            "typeLabel": "object"
+          },
+          "entities": {
+            "type": "object",
+            "properties": {
+              "hashtags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "text": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX].text",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "tweets.items.[INDEX].entities.hashtags",
+                "typeLabel": "object[]"
+              },
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "display_url": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].display_url",
+                      "typeLabel": "string"
+                    },
+                    "expanded_url": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].expanded_url",
+                      "typeLabel": "string"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "url": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].url",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "tweets.items.[INDEX].entities.urls",
+                "typeLabel": "object[]"
+              },
+              "user_mentions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id_str": {
+                      "type": "string",
+                      "description": "The ID of the user being mentioned",
+                      "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX].id_str",
+                      "typeLabel": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the user being mentioned",
+                      "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX].name",
+                      "typeLabel": "string"
+                    },
+                    "screen_name": {
+                      "type": "string",
+                      "description": "The screen name of the user being mentioned",
+                      "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX].screen_name",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "tweets.items.[INDEX].entities.user_mentions",
+                "typeLabel": "object[]"
+              }
+            },
+            "description": "The entities in the tweet.eg. hashtags,urls,mentions",
+            "uniqueKey": "tweets.items.[INDEX].entities",
+            "typeLabel": "object"
+          },
+          "quoted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being quoted.may be null",
+            "uniqueKey": "tweets.items.[INDEX].quoted_tweet",
+            "typeLabel": "any"
+          },
+          "retweeted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being retweeted.may be null",
+            "uniqueKey": "tweets.items.[INDEX].retweeted_tweet",
+            "typeLabel": "any"
+          },
+          "isLimitedReply": {
+            "type": "boolean",
+            "description": "Whether the tweet is a limited reply. Possible restrictions: only mentioned users, verified users, or followed accounts can reply",
+            "uniqueKey": "tweets.items.[INDEX].isLimitedReply",
+            "typeLabel": "boolean"
+          }
+        },
+        "uniqueKey": "tweets.items.[INDEX]",
+        "typeLabel": "object"
+      },
+      "description": "Array of tweets",
+      "isRequired": true,
+      "uniqueKey": "tweets",
+      "typeLabel": "object[]"
+    },
+    "has_next_page": {
+      "type": "boolean",
+      "description": "Indicates if there are more results available",
+      "isRequired": true,
+      "uniqueKey": "has_next_page",
+      "typeLabel": "boolean"
+    },
+    "next_cursor": {
+      "type": "string",
+      "description": "Cursor for fetching the next page of results",
+      "isRequired": true,
+      "uniqueKey": "next_cursor",
+      "typeLabel": "string"
+    }
+  },
+  "required": [
+    "tweets",
+    "has_next_page",
+    "next_cursor"
+  ],
+  "uniqueKey": "",
+  "typeLabel": "object"
+}
 ```
 
-| HTTP Status | Meaning | Action |
-|-------------|---------|--------|
-| 200 | Success | Parse response body |
-| 401 | Invalid/expired API key | Check your key |
-| 403 | Account restricted or forbidden | Check account status |
-| 429 | Rate limited | Wait and retry (respect QPS limits) |
-| 500 | Server error | Retry with exponential backoff |
+### get_tweet_reply
+- **Description:** get tweet replies by tweet id.Each page returns up to 20 replies(Sometimes less than 20,because we will filter out ads or other not  tweets). Use cursor for pagination. Order by reply time desc
+- **Method + Path:** `GET /twitter/tweet/replies`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweet/replies' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'tweetId=1887346801234567890' \
+  --data-urlencode 'tweet=1887346801234567890' \
+  --data-urlencode 'sinceTime=1704067200' \
+  --data-urlencode 'untilTime=1706745600' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: replies, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+- **Full response schema (live docs):**
+```json
+{
+  "type": "object",
+  "properties": {
+    "replies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "tweet"
+            ],
+            "uniqueKey": "replies.items.[INDEX].type",
+            "typeLabel": "enum<string>"
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the tweet",
+            "uniqueKey": "replies.items.[INDEX].id",
+            "typeLabel": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the tweet",
+            "uniqueKey": "replies.items.[INDEX].url",
+            "typeLabel": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text of the tweet",
+            "uniqueKey": "replies.items.[INDEX].text",
+            "typeLabel": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the tweet.eg. \"Twitter for iPhone\"",
+            "uniqueKey": "replies.items.[INDEX].source",
+            "typeLabel": "string"
+          },
+          "retweetCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been retweeted",
+            "uniqueKey": "replies.items.[INDEX].retweetCount",
+            "typeLabel": "integer"
+          },
+          "replyCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been replied to",
+            "uniqueKey": "replies.items.[INDEX].replyCount",
+            "typeLabel": "integer"
+          },
+          "likeCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been liked",
+            "uniqueKey": "replies.items.[INDEX].likeCount",
+            "typeLabel": "integer"
+          },
+          "quoteCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been quoted",
+            "uniqueKey": "replies.items.[INDEX].quoteCount",
+            "typeLabel": "integer"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been viewed",
+            "uniqueKey": "replies.items.[INDEX].viewCount",
+            "typeLabel": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the tweet was created.eg. Tue Dec 10 07:00:30 +0000 2024",
+            "uniqueKey": "replies.items.[INDEX].createdAt",
+            "typeLabel": "string"
+          },
+          "lang": {
+            "type": "string",
+            "description": "The language of the tweet.eg. \"en\".may be empty",
+            "uniqueKey": "replies.items.[INDEX].lang",
+            "typeLabel": "string"
+          },
+          "bookmarkCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been bookmarked",
+            "uniqueKey": "replies.items.[INDEX].bookmarkCount",
+            "typeLabel": "integer"
+          },
+          "isReply": {
+            "type": "boolean",
+            "description": "Indicates if the tweet is a reply",
+            "uniqueKey": "replies.items.[INDEX].isReply",
+            "typeLabel": "boolean"
+          },
+          "inReplyToId": {
+            "type": "string",
+            "description": "The ID of the tweet being replied to.may be empty",
+            "uniqueKey": "replies.items.[INDEX].inReplyToId",
+            "typeLabel": "string"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "The ID of the conversation the tweet is part of.may be empty",
+            "uniqueKey": "replies.items.[INDEX].conversationId",
+            "typeLabel": "string"
+          },
+          "displayTextRange": {
+            "type": "array",
+            "description": "specifies the UTF-16 code unit indices in full_text that define the visible portion of a Tweet.eg\"@jack Thanks for the update!\",display_text_range is [6, 28]",
+            "items": {
+              "type": "integer",
+              "uniqueKey": "replies.items.[INDEX].displayTextRange.items.[INDEX]",
+              "typeLabel": "integer"
+            },
+            "uniqueKey": "replies.items.[INDEX].displayTextRange",
+            "typeLabel": "integer[]"
+          },
+          "inReplyToUserId": {
+            "type": "string",
+            "description": "The ID of the user being replied to.may be empty",
+            "uniqueKey": "replies.items.[INDEX].inReplyToUserId",
+            "typeLabel": "string"
+          },
+          "inReplyToUsername": {
+            "type": "string",
+            "description": "The username of the user being replied to.may be empty",
+            "uniqueKey": "replies.items.[INDEX].inReplyToUsername",
+            "typeLabel": "string"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "user"
+                ],
+                "uniqueKey": "replies.items.[INDEX].author.type",
+                "typeLabel": "enum<string>"
+              },
+              "userName": {
+                "type": "string",
+                "description": "The username of the Twitter user",
+                "uniqueKey": "replies.items.[INDEX].author.userName",
+                "typeLabel": "string"
+              },
+              "url": {
+                "type": "string",
+                "description": "The x.com URL of the user's profile",
+                "uniqueKey": "replies.items.[INDEX].author.url",
+                "typeLabel": "string"
+              },
+              "id": {
+                "type": "string",
+                "description": "The unique identifier of the user",
+                "uniqueKey": "replies.items.[INDEX].author.id",
+                "typeLabel": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "The display name of the user",
+                "uniqueKey": "replies.items.[INDEX].author.name",
+                "typeLabel": "string"
+              },
+              "isBlueVerified": {
+                "type": "boolean",
+                "description": "Whether the user has Twitter Blue verification",
+                "uniqueKey": "replies.items.[INDEX].author.isBlueVerified",
+                "typeLabel": "boolean"
+              },
+              "verifiedType": {
+                "type": "string",
+                "description": "The type of verification. eg. \"government\" ,can be empty",
+                "uniqueKey": "replies.items.[INDEX].author.verifiedType",
+                "typeLabel": "string"
+              },
+              "profilePicture": {
+                "type": "string",
+                "description": "URL of the user's profile picture",
+                "uniqueKey": "replies.items.[INDEX].author.profilePicture",
+                "typeLabel": "string"
+              },
+              "coverPicture": {
+                "type": "string",
+                "description": "URL of the user's cover picture",
+                "uniqueKey": "replies.items.[INDEX].author.coverPicture",
+                "typeLabel": "string"
+              },
+              "description": {
+                "type": "string",
+                "description": "The user's profile description",
+                "uniqueKey": "replies.items.[INDEX].author.description",
+                "typeLabel": "string"
+              },
+              "location": {
+                "type": "string",
+                "description": "The user's location.for example: 東京の端っこ . may be empty",
+                "uniqueKey": "replies.items.[INDEX].author.location",
+                "typeLabel": "string"
+              },
+              "followers": {
+                "type": "integer",
+                "description": "Number of followers",
+                "uniqueKey": "replies.items.[INDEX].author.followers",
+                "typeLabel": "integer"
+              },
+              "following": {
+                "type": "integer",
+                "description": "Number of accounts following",
+                "uniqueKey": "replies.items.[INDEX].author.following",
+                "typeLabel": "integer"
+              },
+              "canDm": {
+                "type": "boolean",
+                "description": "Whether the user can receive DMs",
+                "uniqueKey": "replies.items.[INDEX].author.canDm",
+                "typeLabel": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "When the account was created.for example: Thu Dec 13 08:41:26 +0000 2007",
+                "uniqueKey": "replies.items.[INDEX].author.createdAt",
+                "typeLabel": "string"
+              },
+              "favouritesCount": {
+                "type": "integer",
+                "description": "Number of favorites",
+                "uniqueKey": "replies.items.[INDEX].author.favouritesCount",
+                "typeLabel": "integer"
+              },
+              "hasCustomTimelines": {
+                "type": "boolean",
+                "description": "Whether the user has custom timelines",
+                "uniqueKey": "replies.items.[INDEX].author.hasCustomTimelines",
+                "typeLabel": "boolean"
+              },
+              "isTranslator": {
+                "type": "boolean",
+                "description": "Whether the user is a translator",
+                "uniqueKey": "replies.items.[INDEX].author.isTranslator",
+                "typeLabel": "boolean"
+              },
+              "mediaCount": {
+                "type": "integer",
+                "description": "Number of media posts",
+                "uniqueKey": "replies.items.[INDEX].author.mediaCount",
+                "typeLabel": "integer"
+              },
+              "statusesCount": {
+                "type": "integer",
+                "description": "Number of status updates",
+                "uniqueKey": "replies.items.[INDEX].author.statusesCount",
+                "typeLabel": "integer"
+              },
+              "withheldInCountries": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "replies.items.[INDEX].author.withheldInCountries.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "Countries where the account is withheld",
+                "uniqueKey": "replies.items.[INDEX].author.withheldInCountries",
+                "typeLabel": "string[]"
+              },
+              "affiliatesHighlightedLabel": {
+                "type": "object",
+                "uniqueKey": "replies.items.[INDEX].author.affiliatesHighlightedLabel",
+                "typeLabel": "object"
+              },
+              "possiblySensitive": {
+                "type": "boolean",
+                "description": "Whether the account may contain sensitive content",
+                "uniqueKey": "replies.items.[INDEX].author.possiblySensitive",
+                "typeLabel": "boolean"
+              },
+              "pinnedTweetIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "replies.items.[INDEX].author.pinnedTweetIds.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "IDs of pinned tweets",
+                "uniqueKey": "replies.items.[INDEX].author.pinnedTweetIds",
+                "typeLabel": "string[]"
+              },
+              "isAutomated": {
+                "type": "boolean",
+                "description": "Whether the account is automated",
+                "uniqueKey": "replies.items.[INDEX].author.isAutomated",
+                "typeLabel": "boolean"
+              },
+              "automatedBy": {
+                "type": "string",
+                "description": "The account that automated the account",
+                "uniqueKey": "replies.items.[INDEX].author.automatedBy",
+                "typeLabel": "string"
+              },
+              "unavailable": {
+                "type": "boolean",
+                "description": "Whether the account is unavailable",
+                "uniqueKey": "replies.items.[INDEX].author.unavailable",
+                "typeLabel": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "description": "The message of the account.eg. \"This account is unavailable\" or \"This account is suspended\"",
+                "uniqueKey": "replies.items.[INDEX].author.message",
+                "typeLabel": "string"
+              },
+              "unavailableReason": {
+                "type": "string",
+                "description": "The reason the account is unavailable.eg. \"suspended\" ",
+                "uniqueKey": "replies.items.[INDEX].author.unavailableReason",
+                "typeLabel": "string"
+              },
+              "profile_bio": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.description",
+                    "typeLabel": "string"
+                  },
+                  "entities": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description",
+                        "typeLabel": "object"
+                      },
+                      "url": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url",
+                        "typeLabel": "object"
+                      }
+                    },
+                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities",
+                    "typeLabel": "object"
+                  }
+                },
+                "uniqueKey": "replies.items.[INDEX].author.profile_bio",
+                "typeLabel": "object"
+              }
+            },
+            "description": "The user who posted the tweet",
+            "uniqueKey": "replies.items.[INDEX].author",
+            "typeLabel": "object"
+          },
+          "entities": {
+            "type": "object",
+            "properties": {
+              "hashtags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "text": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX].text",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "replies.items.[INDEX].entities.hashtags",
+                "typeLabel": "object[]"
+              },
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "display_url": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].display_url",
+                      "typeLabel": "string"
+                    },
+                    "expanded_url": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].expanded_url",
+                      "typeLabel": "string"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "url": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].url",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "replies.items.[INDEX].entities.urls",
+                "typeLabel": "object[]"
+              },
+              "user_mentions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id_str": {
+                      "type": "string",
+                      "description": "The ID of the user being mentioned",
+                      "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX].id_str",
+                      "typeLabel": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the user being mentioned",
+                      "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX].name",
+                      "typeLabel": "string"
+                    },
+                    "screen_name": {
+                      "type": "string",
+                      "description": "The screen name of the user being mentioned",
+                      "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX].screen_name",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "replies.items.[INDEX].entities.user_mentions",
+                "typeLabel": "object[]"
+              }
+            },
+            "description": "The entities in the tweet.eg. hashtags,urls,mentions",
+            "uniqueKey": "replies.items.[INDEX].entities",
+            "typeLabel": "object"
+          },
+          "quoted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being quoted.may be null",
+            "uniqueKey": "replies.items.[INDEX].quoted_tweet",
+            "typeLabel": "any"
+          },
+          "retweeted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being retweeted.may be null",
+            "uniqueKey": "replies.items.[INDEX].retweeted_tweet",
+            "typeLabel": "any"
+          },
+          "isLimitedReply": {
+            "type": "boolean",
+            "description": "Whether the tweet is a limited reply. Possible restrictions: only mentioned users, verified users, or followed accounts can reply",
+            "uniqueKey": "replies.items.[INDEX].isLimitedReply",
+            "typeLabel": "boolean"
+          }
+        },
+        "uniqueKey": "replies.items.[INDEX]",
+        "typeLabel": "object"
+      },
+      "description": "Array of tweets",
+      "uniqueKey": "replies",
+      "typeLabel": "object[]"
+    },
+    "has_next_page": {
+      "type": "boolean",
+      "description": "Indicates if there are more results available. If true, use next_cursor to fetch the next page. Warning: Due to Twitter API inconsistency, has_more might return true even when no additional data exists. In such cases, subsequent requests will return empty results - this is a known platform limitation.",
+      "uniqueKey": "has_next_page",
+      "typeLabel": "boolean"
+    },
+    "next_cursor": {
+      "type": "string",
+      "description": "Cursor for fetching the next page of results",
+      "uniqueKey": "next_cursor",
+      "typeLabel": "string"
+    },
+    "status": {
+      "type": "string",
+      "description": "Status of the request.success or error",
+      "enum": [
+        "success",
+        "error"
+      ],
+      "uniqueKey": "status",
+      "typeLabel": "enum<string>"
+    },
+    "message": {
+      "type": "string",
+      "description": "Message of the request.error message",
+      "uniqueKey": "message",
+      "typeLabel": "string"
+    }
+  },
+  "uniqueKey": "",
+  "typeLabel": "object"
+}
+```
 
-For write actions, also check `status` field in response body — HTTP 200 with `"status": "error"` means the action failed (e.g., expired cookies, banned account).
+### get_tweet_replies_v2
+- **Description:** Get tweet replies by tweet id (V2). Each page returns up to 20 replies. Use cursor for pagination. Supports sorting by Relevance, Latest, or Likes.
+- **Method + Path:** `GET /twitter/tweet/replies/v2`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweet/replies/v2' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'tweetId=1887346801234567890' \
+  --data-urlencode 'cursor=' \
+  --data-urlencode 'queryType=Latest'
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: replies, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+- **Full response schema (live docs):**
+```json
+{
+  "type": "object",
+  "properties": {
+    "replies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "tweet"
+            ],
+            "uniqueKey": "replies.items.[INDEX].type",
+            "typeLabel": "enum<string>"
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the tweet",
+            "uniqueKey": "replies.items.[INDEX].id",
+            "typeLabel": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the tweet",
+            "uniqueKey": "replies.items.[INDEX].url",
+            "typeLabel": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text of the tweet",
+            "uniqueKey": "replies.items.[INDEX].text",
+            "typeLabel": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the tweet.eg. \"Twitter for iPhone\"",
+            "uniqueKey": "replies.items.[INDEX].source",
+            "typeLabel": "string"
+          },
+          "retweetCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been retweeted",
+            "uniqueKey": "replies.items.[INDEX].retweetCount",
+            "typeLabel": "integer"
+          },
+          "replyCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been replied to",
+            "uniqueKey": "replies.items.[INDEX].replyCount",
+            "typeLabel": "integer"
+          },
+          "likeCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been liked",
+            "uniqueKey": "replies.items.[INDEX].likeCount",
+            "typeLabel": "integer"
+          },
+          "quoteCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been quoted",
+            "uniqueKey": "replies.items.[INDEX].quoteCount",
+            "typeLabel": "integer"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been viewed",
+            "uniqueKey": "replies.items.[INDEX].viewCount",
+            "typeLabel": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the tweet was created.eg. Tue Dec 10 07:00:30 +0000 2024",
+            "uniqueKey": "replies.items.[INDEX].createdAt",
+            "typeLabel": "string"
+          },
+          "lang": {
+            "type": "string",
+            "description": "The language of the tweet.eg. \"en\".may be empty",
+            "uniqueKey": "replies.items.[INDEX].lang",
+            "typeLabel": "string"
+          },
+          "bookmarkCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been bookmarked",
+            "uniqueKey": "replies.items.[INDEX].bookmarkCount",
+            "typeLabel": "integer"
+          },
+          "isReply": {
+            "type": "boolean",
+            "description": "Indicates if the tweet is a reply",
+            "uniqueKey": "replies.items.[INDEX].isReply",
+            "typeLabel": "boolean"
+          },
+          "inReplyToId": {
+            "type": "string",
+            "description": "The ID of the tweet being replied to.may be empty",
+            "uniqueKey": "replies.items.[INDEX].inReplyToId",
+            "typeLabel": "string"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "The ID of the conversation the tweet is part of.may be empty",
+            "uniqueKey": "replies.items.[INDEX].conversationId",
+            "typeLabel": "string"
+          },
+          "displayTextRange": {
+            "type": "array",
+            "description": "specifies the UTF-16 code unit indices in full_text that define the visible portion of a Tweet.eg\"@jack Thanks for the update!\",display_text_range is [6, 28]",
+            "items": {
+              "type": "integer",
+              "uniqueKey": "replies.items.[INDEX].displayTextRange.items.[INDEX]",
+              "typeLabel": "integer"
+            },
+            "uniqueKey": "replies.items.[INDEX].displayTextRange",
+            "typeLabel": "integer[]"
+          },
+          "inReplyToUserId": {
+            "type": "string",
+            "description": "The ID of the user being replied to.may be empty",
+            "uniqueKey": "replies.items.[INDEX].inReplyToUserId",
+            "typeLabel": "string"
+          },
+          "inReplyToUsername": {
+            "type": "string",
+            "description": "The username of the user being replied to.may be empty",
+            "uniqueKey": "replies.items.[INDEX].inReplyToUsername",
+            "typeLabel": "string"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "user"
+                ],
+                "uniqueKey": "replies.items.[INDEX].author.type",
+                "typeLabel": "enum<string>"
+              },
+              "userName": {
+                "type": "string",
+                "description": "The username of the Twitter user",
+                "uniqueKey": "replies.items.[INDEX].author.userName",
+                "typeLabel": "string"
+              },
+              "url": {
+                "type": "string",
+                "description": "The x.com URL of the user's profile",
+                "uniqueKey": "replies.items.[INDEX].author.url",
+                "typeLabel": "string"
+              },
+              "id": {
+                "type": "string",
+                "description": "The unique identifier of the user",
+                "uniqueKey": "replies.items.[INDEX].author.id",
+                "typeLabel": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "The display name of the user",
+                "uniqueKey": "replies.items.[INDEX].author.name",
+                "typeLabel": "string"
+              },
+              "isBlueVerified": {
+                "type": "boolean",
+                "description": "Whether the user has Twitter Blue verification",
+                "uniqueKey": "replies.items.[INDEX].author.isBlueVerified",
+                "typeLabel": "boolean"
+              },
+              "verifiedType": {
+                "type": "string",
+                "description": "The type of verification. eg. \"government\" ,can be empty",
+                "uniqueKey": "replies.items.[INDEX].author.verifiedType",
+                "typeLabel": "string"
+              },
+              "profilePicture": {
+                "type": "string",
+                "description": "URL of the user's profile picture",
+                "uniqueKey": "replies.items.[INDEX].author.profilePicture",
+                "typeLabel": "string"
+              },
+              "coverPicture": {
+                "type": "string",
+                "description": "URL of the user's cover picture",
+                "uniqueKey": "replies.items.[INDEX].author.coverPicture",
+                "typeLabel": "string"
+              },
+              "description": {
+                "type": "string",
+                "description": "The user's profile description",
+                "uniqueKey": "replies.items.[INDEX].author.description",
+                "typeLabel": "string"
+              },
+              "location": {
+                "type": "string",
+                "description": "The user's location.for example: 東京の端っこ . may be empty",
+                "uniqueKey": "replies.items.[INDEX].author.location",
+                "typeLabel": "string"
+              },
+              "followers": {
+                "type": "integer",
+                "description": "Number of followers",
+                "uniqueKey": "replies.items.[INDEX].author.followers",
+                "typeLabel": "integer"
+              },
+              "following": {
+                "type": "integer",
+                "description": "Number of accounts following",
+                "uniqueKey": "replies.items.[INDEX].author.following",
+                "typeLabel": "integer"
+              },
+              "canDm": {
+                "type": "boolean",
+                "description": "Whether the user can receive DMs",
+                "uniqueKey": "replies.items.[INDEX].author.canDm",
+                "typeLabel": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "When the account was created.for example: Thu Dec 13 08:41:26 +0000 2007",
+                "uniqueKey": "replies.items.[INDEX].author.createdAt",
+                "typeLabel": "string"
+              },
+              "favouritesCount": {
+                "type": "integer",
+                "description": "Number of favorites",
+                "uniqueKey": "replies.items.[INDEX].author.favouritesCount",
+                "typeLabel": "integer"
+              },
+              "hasCustomTimelines": {
+                "type": "boolean",
+                "description": "Whether the user has custom timelines",
+                "uniqueKey": "replies.items.[INDEX].author.hasCustomTimelines",
+                "typeLabel": "boolean"
+              },
+              "isTranslator": {
+                "type": "boolean",
+                "description": "Whether the user is a translator",
+                "uniqueKey": "replies.items.[INDEX].author.isTranslator",
+                "typeLabel": "boolean"
+              },
+              "mediaCount": {
+                "type": "integer",
+                "description": "Number of media posts",
+                "uniqueKey": "replies.items.[INDEX].author.mediaCount",
+                "typeLabel": "integer"
+              },
+              "statusesCount": {
+                "type": "integer",
+                "description": "Number of status updates",
+                "uniqueKey": "replies.items.[INDEX].author.statusesCount",
+                "typeLabel": "integer"
+              },
+              "withheldInCountries": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "replies.items.[INDEX].author.withheldInCountries.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "Countries where the account is withheld",
+                "uniqueKey": "replies.items.[INDEX].author.withheldInCountries",
+                "typeLabel": "string[]"
+              },
+              "affiliatesHighlightedLabel": {
+                "type": "object",
+                "uniqueKey": "replies.items.[INDEX].author.affiliatesHighlightedLabel",
+                "typeLabel": "object"
+              },
+              "possiblySensitive": {
+                "type": "boolean",
+                "description": "Whether the account may contain sensitive content",
+                "uniqueKey": "replies.items.[INDEX].author.possiblySensitive",
+                "typeLabel": "boolean"
+              },
+              "pinnedTweetIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "replies.items.[INDEX].author.pinnedTweetIds.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "IDs of pinned tweets",
+                "uniqueKey": "replies.items.[INDEX].author.pinnedTweetIds",
+                "typeLabel": "string[]"
+              },
+              "isAutomated": {
+                "type": "boolean",
+                "description": "Whether the account is automated",
+                "uniqueKey": "replies.items.[INDEX].author.isAutomated",
+                "typeLabel": "boolean"
+              },
+              "automatedBy": {
+                "type": "string",
+                "description": "The account that automated the account",
+                "uniqueKey": "replies.items.[INDEX].author.automatedBy",
+                "typeLabel": "string"
+              },
+              "unavailable": {
+                "type": "boolean",
+                "description": "Whether the account is unavailable",
+                "uniqueKey": "replies.items.[INDEX].author.unavailable",
+                "typeLabel": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "description": "The message of the account.eg. \"This account is unavailable\" or \"This account is suspended\"",
+                "uniqueKey": "replies.items.[INDEX].author.message",
+                "typeLabel": "string"
+              },
+              "unavailableReason": {
+                "type": "string",
+                "description": "The reason the account is unavailable.eg. \"suspended\" ",
+                "uniqueKey": "replies.items.[INDEX].author.unavailableReason",
+                "typeLabel": "string"
+              },
+              "profile_bio": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.description",
+                    "typeLabel": "string"
+                  },
+                  "entities": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.description",
+                        "typeLabel": "object"
+                      },
+                      "url": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities.url",
+                        "typeLabel": "object"
+                      }
+                    },
+                    "uniqueKey": "replies.items.[INDEX].author.profile_bio.entities",
+                    "typeLabel": "object"
+                  }
+                },
+                "uniqueKey": "replies.items.[INDEX].author.profile_bio",
+                "typeLabel": "object"
+              }
+            },
+            "description": "The user who posted the tweet",
+            "uniqueKey": "replies.items.[INDEX].author",
+            "typeLabel": "object"
+          },
+          "entities": {
+            "type": "object",
+            "properties": {
+              "hashtags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "text": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX].text",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "replies.items.[INDEX].entities.hashtags.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "replies.items.[INDEX].entities.hashtags",
+                "typeLabel": "object[]"
+              },
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "display_url": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].display_url",
+                      "typeLabel": "string"
+                    },
+                    "expanded_url": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].expanded_url",
+                      "typeLabel": "string"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "url": {
+                      "type": "string",
+                      "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX].url",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "replies.items.[INDEX].entities.urls.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "replies.items.[INDEX].entities.urls",
+                "typeLabel": "object[]"
+              },
+              "user_mentions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id_str": {
+                      "type": "string",
+                      "description": "The ID of the user being mentioned",
+                      "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX].id_str",
+                      "typeLabel": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the user being mentioned",
+                      "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX].name",
+                      "typeLabel": "string"
+                    },
+                    "screen_name": {
+                      "type": "string",
+                      "description": "The screen name of the user being mentioned",
+                      "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX].screen_name",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "replies.items.[INDEX].entities.user_mentions.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "replies.items.[INDEX].entities.user_mentions",
+                "typeLabel": "object[]"
+              }
+            },
+            "description": "The entities in the tweet.eg. hashtags,urls,mentions",
+            "uniqueKey": "replies.items.[INDEX].entities",
+            "typeLabel": "object"
+          },
+          "quoted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being quoted.may be null",
+            "uniqueKey": "replies.items.[INDEX].quoted_tweet",
+            "typeLabel": "any"
+          },
+          "retweeted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being retweeted.may be null",
+            "uniqueKey": "replies.items.[INDEX].retweeted_tweet",
+            "typeLabel": "any"
+          },
+          "isLimitedReply": {
+            "type": "boolean",
+            "description": "Whether the tweet is a limited reply. Possible restrictions: only mentioned users, verified users, or followed accounts can reply",
+            "uniqueKey": "replies.items.[INDEX].isLimitedReply",
+            "typeLabel": "boolean"
+          }
+        },
+        "uniqueKey": "replies.items.[INDEX]",
+        "typeLabel": "object"
+      },
+      "description": "Array of reply tweets",
+      "uniqueKey": "replies",
+      "typeLabel": "object[]"
+    },
+    "has_next_page": {
+      "type": "boolean",
+      "description": "Indicates if there are more results available. If true, use next_cursor to fetch the next page.",
+      "uniqueKey": "has_next_page",
+      "typeLabel": "boolean"
+    },
+    "next_cursor": {
+      "type": "string",
+      "description": "Cursor for fetching the next page of results",
+      "uniqueKey": "next_cursor",
+      "typeLabel": "string"
+    },
+    "status": {
+      "type": "string",
+      "description": "Status of the request. success or error",
+      "enum": [
+        "success",
+        "error"
+      ],
+      "uniqueKey": "status",
+      "typeLabel": "enum<string>"
+    },
+    "message": {
+      "type": "string",
+      "description": "Message of the request. error message",
+      "uniqueKey": "message",
+      "typeLabel": "string"
+    }
+  },
+  "uniqueKey": "",
+  "typeLabel": "object"
+}
+```
 
-## Login (Required for Write Actions)
+### get_tweet_by_ids
+- **Description:** get tweet by tweet ids
+- **Method + Path:** `GET /twitter/tweets`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweets' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'tweet_ids=1887346801234567890' \
+  --data-urlencode 
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, status, message.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+- **Full response schema (live docs):**
+```json
+{
+  "type": "object",
+  "properties": {
+    "tweets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "tweet"
+            ],
+            "uniqueKey": "tweets.items.[INDEX].type",
+            "typeLabel": "enum<string>"
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the tweet",
+            "uniqueKey": "tweets.items.[INDEX].id",
+            "typeLabel": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the tweet",
+            "uniqueKey": "tweets.items.[INDEX].url",
+            "typeLabel": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text of the tweet",
+            "uniqueKey": "tweets.items.[INDEX].text",
+            "typeLabel": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the tweet.eg. \"Twitter for iPhone\"",
+            "uniqueKey": "tweets.items.[INDEX].source",
+            "typeLabel": "string"
+          },
+          "retweetCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been retweeted",
+            "uniqueKey": "tweets.items.[INDEX].retweetCount",
+            "typeLabel": "integer"
+          },
+          "replyCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been replied to",
+            "uniqueKey": "tweets.items.[INDEX].replyCount",
+            "typeLabel": "integer"
+          },
+          "likeCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been liked",
+            "uniqueKey": "tweets.items.[INDEX].likeCount",
+            "typeLabel": "integer"
+          },
+          "quoteCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been quoted",
+            "uniqueKey": "tweets.items.[INDEX].quoteCount",
+            "typeLabel": "integer"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been viewed",
+            "uniqueKey": "tweets.items.[INDEX].viewCount",
+            "typeLabel": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the tweet was created.eg. Tue Dec 10 07:00:30 +0000 2024",
+            "uniqueKey": "tweets.items.[INDEX].createdAt",
+            "typeLabel": "string"
+          },
+          "lang": {
+            "type": "string",
+            "description": "The language of the tweet.eg. \"en\".may be empty",
+            "uniqueKey": "tweets.items.[INDEX].lang",
+            "typeLabel": "string"
+          },
+          "bookmarkCount": {
+            "type": "integer",
+            "description": "The number of times the tweet has been bookmarked",
+            "uniqueKey": "tweets.items.[INDEX].bookmarkCount",
+            "typeLabel": "integer"
+          },
+          "isReply": {
+            "type": "boolean",
+            "description": "Indicates if the tweet is a reply",
+            "uniqueKey": "tweets.items.[INDEX].isReply",
+            "typeLabel": "boolean"
+          },
+          "inReplyToId": {
+            "type": "string",
+            "description": "The ID of the tweet being replied to.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].inReplyToId",
+            "typeLabel": "string"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "The ID of the conversation the tweet is part of.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].conversationId",
+            "typeLabel": "string"
+          },
+          "displayTextRange": {
+            "type": "array",
+            "description": "specifies the UTF-16 code unit indices in full_text that define the visible portion of a Tweet.eg\"@jack Thanks for the update!\",display_text_range is [6, 28]",
+            "items": {
+              "type": "integer",
+              "uniqueKey": "tweets.items.[INDEX].displayTextRange.items.[INDEX]",
+              "typeLabel": "integer"
+            },
+            "uniqueKey": "tweets.items.[INDEX].displayTextRange",
+            "typeLabel": "integer[]"
+          },
+          "inReplyToUserId": {
+            "type": "string",
+            "description": "The ID of the user being replied to.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].inReplyToUserId",
+            "typeLabel": "string"
+          },
+          "inReplyToUsername": {
+            "type": "string",
+            "description": "The username of the user being replied to.may be empty",
+            "uniqueKey": "tweets.items.[INDEX].inReplyToUsername",
+            "typeLabel": "string"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "user"
+                ],
+                "uniqueKey": "tweets.items.[INDEX].author.type",
+                "typeLabel": "enum<string>"
+              },
+              "userName": {
+                "type": "string",
+                "description": "The username of the Twitter user",
+                "uniqueKey": "tweets.items.[INDEX].author.userName",
+                "typeLabel": "string"
+              },
+              "url": {
+                "type": "string",
+                "description": "The x.com URL of the user's profile",
+                "uniqueKey": "tweets.items.[INDEX].author.url",
+                "typeLabel": "string"
+              },
+              "id": {
+                "type": "string",
+                "description": "The unique identifier of the user",
+                "uniqueKey": "tweets.items.[INDEX].author.id",
+                "typeLabel": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "The display name of the user",
+                "uniqueKey": "tweets.items.[INDEX].author.name",
+                "typeLabel": "string"
+              },
+              "isBlueVerified": {
+                "type": "boolean",
+                "description": "Whether the user has Twitter Blue verification",
+                "uniqueKey": "tweets.items.[INDEX].author.isBlueVerified",
+                "typeLabel": "boolean"
+              },
+              "verifiedType": {
+                "type": "string",
+                "description": "The type of verification. eg. \"government\" ,can be empty",
+                "uniqueKey": "tweets.items.[INDEX].author.verifiedType",
+                "typeLabel": "string"
+              },
+              "profilePicture": {
+                "type": "string",
+                "description": "URL of the user's profile picture",
+                "uniqueKey": "tweets.items.[INDEX].author.profilePicture",
+                "typeLabel": "string"
+              },
+              "coverPicture": {
+                "type": "string",
+                "description": "URL of the user's cover picture",
+                "uniqueKey": "tweets.items.[INDEX].author.coverPicture",
+                "typeLabel": "string"
+              },
+              "description": {
+                "type": "string",
+                "description": "The user's profile description",
+                "uniqueKey": "tweets.items.[INDEX].author.description",
+                "typeLabel": "string"
+              },
+              "location": {
+                "type": "string",
+                "description": "The user's location.for example: 東京の端っこ . may be empty",
+                "uniqueKey": "tweets.items.[INDEX].author.location",
+                "typeLabel": "string"
+              },
+              "followers": {
+                "type": "integer",
+                "description": "Number of followers",
+                "uniqueKey": "tweets.items.[INDEX].author.followers",
+                "typeLabel": "integer"
+              },
+              "following": {
+                "type": "integer",
+                "description": "Number of accounts following",
+                "uniqueKey": "tweets.items.[INDEX].author.following",
+                "typeLabel": "integer"
+              },
+              "canDm": {
+                "type": "boolean",
+                "description": "Whether the user can receive DMs",
+                "uniqueKey": "tweets.items.[INDEX].author.canDm",
+                "typeLabel": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "When the account was created.for example: Thu Dec 13 08:41:26 +0000 2007",
+                "uniqueKey": "tweets.items.[INDEX].author.createdAt",
+                "typeLabel": "string"
+              },
+              "favouritesCount": {
+                "type": "integer",
+                "description": "Number of favorites",
+                "uniqueKey": "tweets.items.[INDEX].author.favouritesCount",
+                "typeLabel": "integer"
+              },
+              "hasCustomTimelines": {
+                "type": "boolean",
+                "description": "Whether the user has custom timelines",
+                "uniqueKey": "tweets.items.[INDEX].author.hasCustomTimelines",
+                "typeLabel": "boolean"
+              },
+              "isTranslator": {
+                "type": "boolean",
+                "description": "Whether the user is a translator",
+                "uniqueKey": "tweets.items.[INDEX].author.isTranslator",
+                "typeLabel": "boolean"
+              },
+              "mediaCount": {
+                "type": "integer",
+                "description": "Number of media posts",
+                "uniqueKey": "tweets.items.[INDEX].author.mediaCount",
+                "typeLabel": "integer"
+              },
+              "statusesCount": {
+                "type": "integer",
+                "description": "Number of status updates",
+                "uniqueKey": "tweets.items.[INDEX].author.statusesCount",
+                "typeLabel": "integer"
+              },
+              "withheldInCountries": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "tweets.items.[INDEX].author.withheldInCountries.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "Countries where the account is withheld",
+                "uniqueKey": "tweets.items.[INDEX].author.withheldInCountries",
+                "typeLabel": "string[]"
+              },
+              "affiliatesHighlightedLabel": {
+                "type": "object",
+                "uniqueKey": "tweets.items.[INDEX].author.affiliatesHighlightedLabel",
+                "typeLabel": "object"
+              },
+              "possiblySensitive": {
+                "type": "boolean",
+                "description": "Whether the account may contain sensitive content",
+                "uniqueKey": "tweets.items.[INDEX].author.possiblySensitive",
+                "typeLabel": "boolean"
+              },
+              "pinnedTweetIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueKey": "tweets.items.[INDEX].author.pinnedTweetIds.items.[INDEX]",
+                  "typeLabel": "string"
+                },
+                "description": "IDs of pinned tweets",
+                "uniqueKey": "tweets.items.[INDEX].author.pinnedTweetIds",
+                "typeLabel": "string[]"
+              },
+              "isAutomated": {
+                "type": "boolean",
+                "description": "Whether the account is automated",
+                "uniqueKey": "tweets.items.[INDEX].author.isAutomated",
+                "typeLabel": "boolean"
+              },
+              "automatedBy": {
+                "type": "string",
+                "description": "The account that automated the account",
+                "uniqueKey": "tweets.items.[INDEX].author.automatedBy",
+                "typeLabel": "string"
+              },
+              "unavailable": {
+                "type": "boolean",
+                "description": "Whether the account is unavailable",
+                "uniqueKey": "tweets.items.[INDEX].author.unavailable",
+                "typeLabel": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "description": "The message of the account.eg. \"This account is unavailable\" or \"This account is suspended\"",
+                "uniqueKey": "tweets.items.[INDEX].author.message",
+                "typeLabel": "string"
+              },
+              "unavailableReason": {
+                "type": "string",
+                "description": "The reason the account is unavailable.eg. \"suspended\" ",
+                "uniqueKey": "tweets.items.[INDEX].author.unavailableReason",
+                "typeLabel": "string"
+              },
+              "profile_bio": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.description",
+                    "typeLabel": "string"
+                  },
+                  "entities": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.description",
+                        "typeLabel": "object"
+                      },
+                      "url": {
+                        "type": "object",
+                        "properties": {
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "display_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].display_url",
+                                  "typeLabel": "string"
+                                },
+                                "expanded_url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].expanded_url",
+                                  "typeLabel": "string"
+                                },
+                                "indices": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices.items.[INDEX]",
+                                    "typeLabel": "integer"
+                                  },
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].indices",
+                                  "typeLabel": "integer[]"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX].url",
+                                  "typeLabel": "string"
+                                }
+                              },
+                              "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls.items.[INDEX]",
+                              "typeLabel": "object"
+                            },
+                            "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url.urls",
+                            "typeLabel": "object[]"
+                          }
+                        },
+                        "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities.url",
+                        "typeLabel": "object"
+                      }
+                    },
+                    "uniqueKey": "tweets.items.[INDEX].author.profile_bio.entities",
+                    "typeLabel": "object"
+                  }
+                },
+                "uniqueKey": "tweets.items.[INDEX].author.profile_bio",
+                "typeLabel": "object"
+              }
+            },
+            "description": "The user who posted the tweet",
+            "uniqueKey": "tweets.items.[INDEX].author",
+            "typeLabel": "object"
+          },
+          "entities": {
+            "type": "object",
+            "properties": {
+              "hashtags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "text": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX].text",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "tweets.items.[INDEX].entities.hashtags.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "tweets.items.[INDEX].entities.hashtags",
+                "typeLabel": "object[]"
+              },
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "display_url": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].display_url",
+                      "typeLabel": "string"
+                    },
+                    "expanded_url": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].expanded_url",
+                      "typeLabel": "string"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].indices.items.[INDEX]",
+                        "typeLabel": "integer"
+                      },
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].indices",
+                      "typeLabel": "integer[]"
+                    },
+                    "url": {
+                      "type": "string",
+                      "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX].url",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "tweets.items.[INDEX].entities.urls.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "tweets.items.[INDEX].entities.urls",
+                "typeLabel": "object[]"
+              },
+              "user_mentions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id_str": {
+                      "type": "string",
+                      "description": "The ID of the user being mentioned",
+                      "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX].id_str",
+                      "typeLabel": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the user being mentioned",
+                      "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX].name",
+                      "typeLabel": "string"
+                    },
+                    "screen_name": {
+                      "type": "string",
+                      "description": "The screen name of the user being mentioned",
+                      "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX].screen_name",
+                      "typeLabel": "string"
+                    }
+                  },
+                  "uniqueKey": "tweets.items.[INDEX].entities.user_mentions.items.[INDEX]",
+                  "typeLabel": "object"
+                },
+                "uniqueKey": "tweets.items.[INDEX].entities.user_mentions",
+                "typeLabel": "object[]"
+              }
+            },
+            "description": "The entities in the tweet.eg. hashtags,urls,mentions",
+            "uniqueKey": "tweets.items.[INDEX].entities",
+            "typeLabel": "object"
+          },
+          "quoted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being quoted.may be null",
+            "uniqueKey": "tweets.items.[INDEX].quoted_tweet",
+            "typeLabel": "any"
+          },
+          "retweeted_tweet": {
+            "$circularRef": "2b5fa7d7-8d07-4f45-9ef7-91c2daddd7f0",
+            "description": "The tweet being retweeted.may be null",
+            "uniqueKey": "tweets.items.[INDEX].retweeted_tweet",
+            "typeLabel": "any"
+          },
+          "isLimitedReply": {
+            "type": "boolean",
+            "description": "Whether the tweet is a limited reply. Possible restrictions: only mentioned users, verified users, or followed accounts can reply",
+            "uniqueKey": "tweets.items.[INDEX].isLimitedReply",
+            "typeLabel": "boolean"
+          }
+        },
+        "uniqueKey": "tweets.items.[INDEX]",
+        "typeLabel": "object"
+      },
+      "description": "Array of tweets",
+      "isRequired": true,
+      "uniqueKey": "tweets",
+      "typeLabel": "object[]"
+    },
+    "status": {
+      "type": "string",
+      "description": "Status of the request.success or error",
+      "enum": [
+        "success",
+        "error"
+      ],
+      "isRequired": true,
+      "uniqueKey": "status",
+      "typeLabel": "enum<string>"
+    },
+    "message": {
+      "type": "string",
+      "description": "Message of the request.error message",
+      "isRequired": true,
+      "uniqueKey": "message",
+      "typeLabel": "string"
+    }
+  },
+  "required": [
+    "tweets",
+    "status",
+    "message"
+  ],
+  "uniqueKey": "",
+  "typeLabel": "object"
+}
+```
 
-All write endpoints (post, like, retweet, follow, DM, profile, communities) require `login_cookies` obtained from the login endpoint.
+### get_tweet_quote
+- **Description:** get tweet quotes by tweet id.Each page returns exactly 20 quotes. Use cursor for pagination. Order by quote time desc
+- **Method + Path:** `GET /twitter/tweet/quotes`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweet/quotes' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'tweetId=1887346801234567890' \
+  --data-urlencode 'sinceTime=1704067200' \
+  --data-urlencode 'untilTime=1706745600' \
+  --data-urlencode 'includeReplies=true' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
-### Login Flow
+### get_tweet_retweeter
+- **Description:** get tweet retweeters by tweet id.Each page returns about 100 retweeters. Use cursor for pagination. Order by retweet time desc
+- **Method + Path:** `GET /twitter/tweet/retweeters`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweet/retweeters' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'tweetId=1887346801234567890' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: users, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
+### get_tweet_thread_context
+- **Description:** Get the thread context of a tweet.Suppose a tweet thread consists of t1, t2 (replying to t1), t3 (replying to t2), and t4, t5, t6 (all replying to t3). If we provide an API where you input t3 and receive t1, t2, t3, t4, t5, t6.Pagination is supported.The pagination size cannot be set (due to Twitter's limitations), and the data returned per page is not fixed.
+- **Method + Path:** `GET /twitter/tweet/thread_context`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/tweet/thread_context' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'tweetId=1887346801234567890' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: replies, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+
+### get_community_tweets
+- **Description:** Get tweets of a community. Page size is 20. Order by creation time desc.
+- **Method + Path:** `GET /twitter/community/tweets`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/community/tweets' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'community_id=1887346801234567890' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, has_next_page, next_cursor, status, msg.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+
+### add_webhook_rule
+- **Description:** Add a tweet filter rule. Default rule is not activated.You must call update_rule to activate the rule.
+- **Method + Path:** `POST /oapi/tweet_filter/add_rule`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -X POST 'https://api.twitterapi.io/oapi/tweet_filter/add_rule' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
+```
+- **Request body fields:** See curl example.
+- Response schema (condensed): top-level fields: rule_id, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### get_webhook_rules
+- **Description:** Get all tweet filter rules.Rule can be used in webhook and websocket.You can also modify the rule in our web page.
+- **Method + Path:** `GET /oapi/tweet_filter/get_rules`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/oapi/tweet_filter/get_rules' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: rules, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### update_webhook_rule
+- **Description:** Update a tweet filter rule. You must set all parameters.
+- **Method + Path:** `POST /oapi/tweet_filter/update_rule`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -X POST 'https://api.twitterapi.io/oapi/tweet_filter/update_rule' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
+```
+- **Request body fields:** See curl example.
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### delete_webhook_rule
+- **Description:** Delete a tweet filter rule. You must set all parameters.
+- **Method + Path:** `DELETE /oapi/tweet_filter/delete_rule`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -X DELETE 'https://api.twitterapi.io/oapi/tweet_filter/delete_rule' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
+```
+- **Request body fields:** See curl example.
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+## Users & Graph
+
+### batch_get_user_by_userids
+- **Description:** Batch get user info by user ids. Pricing:
+- **Method + Path:** `GET /twitter/user/batch_info_by_ids`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/batch_info_by_ids' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userIds=1887346801234567890' \
+  --data-urlencode 
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: users, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### get_user_by_username
+- **Description:** Get user info by screen name
+- **Method + Path:** `GET /twitter/user/info`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/info' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userName=elonmusk'
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: data, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### get_user_last_tweets
+- **Description:** Retrieve tweets by user name.Sort by created_at. Results are paginated, with each page returning up to 20 tweets.If you only need to fetch the latest tweets from a single user very frequently, do not use this API—it will cost you a lot. Instead, please refer to https://twitterapi.io/blog/how-to-monitor-twitter-accounts-for-new-tweets-in-real-time. If you have more than 20 Twitter accounts requiring real-time tweet updates, use https://twitterapi.io/twitter-stream which is the most cost-effective solution.
+- **Method + Path:** `GET /twitter/user/last_tweets`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/last_tweets' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userId=1887346801234567890' \
+  --data-urlencode 'userName=elonmusk' \
+  --data-urlencode 'cursor=' \
+  --data-urlencode 'includeReplies=true'
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+
+### get_user_followings
+- **Description:** Get user followings. Each page returns exactly 200 followings. Use cursor for pagination.Sorted by follow date. Most recent followings appear on the first page.
+- **Method + Path:** `GET /twitter/user/followings`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/followings' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userName=elonmusk' \
+  --data-urlencode 'cursor=' \
+  --data-urlencode 'pageSize=20'
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: followings, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+
+### get_user_mention
+- **Description:** get tweet mentions by user screen name.Each page returns exactly 20 mentions. Use cursor for pagination. Order by mention time desc
+- **Method + Path:** `GET /twitter/user/mentions`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/mentions' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userName=elonmusk' \
+  --data-urlencode 'sinceTime=1704067200' \
+  --data-urlencode 'untilTime=1706745600' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, has_next_page, next_cursor, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+
+### get_user_verified_followers
+- **Description:** Get user verified followers in reverse chronological order (newest first). Returns exactly 20 verified followers per page, sorted by follow date. Most recent followers appear on the first page. Use cursor for pagination through the complete followers list.$0.3 per 1000 followers
+- **Method + Path:** `GET /twitter/user/verifiedFollowers`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/verifiedFollowers' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'user_id=1887346801234567890' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: followers, status, message.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** $0.3
+
+### get_user_about
+- **Description:** Get user profile about by screen name
+- **Method + Path:** `GET /twitter/user_about`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user_about' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'userName=elonmusk'
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: data, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### search_user
+- **Description:** Search user by keyword
+- **Method + Path:** `GET /twitter/user/search`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/search' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'query=elon' \
+  --data-urlencode 'cursor='
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: users, has_next_page, next_cursor, status, msg.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
+
+### check_follow_relationship
+- **Description:** Check if the user is following/followed by the target user. Trial operation price: 100 credits per call.
+- **Method + Path:** `GET /twitter/user/check_follow_relationship`
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io/twitter/user/check_follow_relationship' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'source_user_name=elonmusk' \
+  --data-urlencode 'target_user_name=jack'
+```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: data, status, message.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
+
+### user_login_v2
+- **Description:** Log in directly using your email, username, password, and 2FA secret key. And obtain the Login_cookie,  to post tweets, etc. Please note that the Login_cookie obtained through login_v2 can only be used for APIs with the "v2" suffix, such as create_tweet_v2. Trial operation price: $0.003 per call. We highly recommend enabling 2FA for your login – otherwise, the login_cookie you obtain may be faulty, preventing you from posting tweets.
+- **Method + Path:** `POST /twitter/user_login_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
 curl -X POST 'https://api.twitterapi.io/twitter/user_login_v2' \
-  -H 'x-api-key: YOUR_KEY' \
+  -H 'x-api-key: $KEY' \
   -H 'Content-Type: application/json' \
-  -d '{
-    "user_name": "your_twitter_handle",
-    "email": "your_email@example.com",
-    "password": "your_password",
-    "totp_secret": "YOUR_2FA_SECRET",
-    "proxy": "http://user:pass@host:port"
+  --data '{
+    "login_cookies": "$COOKIES"
   }'
 ```
+- **Request body fields:** See curl example.
+- Response schema (condensed): top-level fields: login_cookie, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-**Parameters:**
-- `user_name` (required): Twitter username
-- `email` (required): Account email
-- `password` (required): Account password
-- `proxy` (required): Residential proxy URL — format `http://user:pass@host:port`
-- `totp_secret` (optional but strongly recommended): 2FA TOTP secret key. Without it, cookies may be unreliable. To get it: enable 2FA on Twitter → select "can't scan QR code" → Twitter gives you a 10+ character string.
+## Communities, Lists & Spaces
 
-**Response:**
-```json
-{
-  "status": "success",
-  "login_cookies": "BASE64_ENCODED_COOKIES_STRING"
-}
-```
-
-**Cookie lifetime:** With residential proxies and healthy accounts, cookies remain valid indefinitely. Re-login if you get auth errors from write endpoints.
-
-**Important:** Always use the same proxy for login and subsequent write actions.
-
-## Auth Field Reference
-
-All v2 write endpoints use the same auth pattern:
-
-| Field | Value | Source |
-|-------|-------|--------|
-| `login_cookies` | String from login response | `POST /twitter/user_login_v2` |
-| `proxy` | `http://user:pass@host:port` | Your proxy provider |
-
-Communities endpoints also use `login_cookies` (not `login_cookie` — always plural).
-
----
-
-## Response Schemas
-
-### Tweet Object
-Returned by search, get-by-id, replies, quotes, thread endpoints:
-
-```json
-{
-  "type": "tweet",
-  "id": "1234567890",
-  "url": "https://x.com/user/status/1234567890",
-  "text": "Tweet content here",
-  "source": "Twitter Web App",
-  "retweetCount": 5,
-  "replyCount": 2,
-  "likeCount": 10,
-  "quoteCount": 1,
-  "viewCount": 500,
-  "bookmarkCount": 3,
-  "createdAt": "Wed Feb 12 10:00:00 +0000 2026",
-  "lang": "en",
-  "isReply": false,
-  "inReplyToId": null,
-  "conversationId": "1234567890",
-  "inReplyToUserId": null,
-  "inReplyToUsername": null,
-  "author": { "...User Object..." },
-  "entities": {
-    "hashtags": [{"text": "bitcoin", "indices": [0, 8]}],
-    "urls": [{"display_url": "...", "expanded_url": "...", "url": "..."}],
-    "user_mentions": [{"id_str": "...", "name": "...", "screen_name": "..."}]
-  },
-  "quoted_tweet": null,
-  "retweeted_tweet": null
-}
-```
-
-### User Object
-Returned by user lookup, followers, following, search-user endpoints:
-
-```json
-{
-  "type": "user",
-  "id": "1234567890",
-  "userName": "example_user",
-  "name": "Example User",
-  "url": "https://x.com/example_user",
-  "profilePicture": "https://pbs.twimg.com/...",
-  "coverPicture": "https://pbs.twimg.com/...",
-  "description": "Bio text here",
-  "location": "New York",
-  "followers": 1000,
-  "following": 500,
-  "statusesCount": 2500,
-  "favouritesCount": 5000,
-  "mediaCount": 100,
-  "createdAt": "Mon Jan 01 00:00:00 +0000 2020",
-  "isBlueVerified": true,
-  "verifiedType": "Business",
-  "canDm": true,
-  "isAutomated": false,
-  "automatedBy": null,
-  "pinnedTweetIds": ["1234567890"],
-  "possiblySensitive": false
-}
-```
-
-### Write Action Response
-Returned by post, like, retweet, follow, delete, DM endpoints:
-
-```json
-{
-  "status": "success",
-  "msg": ""
-}
-```
-
-Some write endpoints return additional fields:
-- `create_tweet_v2`: `"tweet_id": "1234567890"`
-- `upload_media_v2`: `"media_id": "1234567890"`
-- `send_dm_v2`: `"message_id": "1234567890"`
-
----
-
-## Endpoints
-
-### Search & Read
-
-#### Tweet Advanced Search
-`GET /twitter/tweet/advanced_search`
-
-Search tweets using Twitter search operators. Returns ~20 tweets per page.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `query` | Yes | Search query (supports operators: `from:`, `to:`, `lang:`, `min_faves:`, `since:`, `until:`, `-filter:replies`, etc.) |
-| `queryType` | No | `Top` (default) or `Latest`. **Note:** Some operators like `min_faves:` only work with `queryType=Latest` |
-| `cursor` | No | Pagination cursor |
-
+### get_community_by_id
+- **Description:** Get community info by community id. Price: 20 credits per call. Note: This API is a bit slow, we are still optimizing it.
+- **Method + Path:** `GET /twitter/community/info`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/advanced_search?query=(from:elonmusk)%20lang:en&queryType=Latest' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/community/info' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'community_id=1887346801234567890' \
+  --data-urlencode 
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: community_info, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
-**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get Tweet By IDs
-`GET /twitter/tweets`
-
-Fetch one or more tweets by ID.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweet_ids` | Yes | Comma-separated tweet IDs |
-
+### get_community_members
+- **Description:** Get members of a community. Page size is 20.
+- **Method + Path:** `GET /twitter/community/members`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweets?tweet_ids=1234567890,9876543210' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/community/members' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'community_id=1887346801234567890' \
+  --data-urlencode 'cursor='
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: members, has_next_page, next_cursor, status, msg.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
-**Response:** `{ "tweets": [Tweet, ...] }`
-
-#### Get Tweet Replies
-`GET /twitter/tweet/replies`
-
-Get replies to a tweet. Ordered by reply time desc. ~20 per page.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweetId` | Yes | Tweet ID |
-| `cursor` | No | Pagination cursor |
-
+### get_community_moderators
+- **Description:** Get moderators of a community. Page size is 20.
+- **Method + Path:** `GET /twitter/community/moderators`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/replies?tweetId=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/community/moderators' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'community_id=1887346801234567890' \
+  --data-urlencode 'cursor='
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: members, has_next_page, next_cursor, status, msg.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
-**Response:** `{ "replies": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get Tweet Replies V2
-`GET /twitter/tweet/replies/v2`
-
-V2 replies with sorting. ~20 per page.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweetId` | Yes | Tweet ID |
-| `sort` | No | `Relevance` (default), `Latest`, or `Likes` |
-| `cursor` | No | Pagination cursor |
-
+### get_all_community_tweets
+- **Description:** get tweets from all communities,each page returns up to 20 tweets. Use cursor for pagination.
+- **Method + Path:** `GET /twitter/community/get_tweets_from_all_community`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/replies/v2?tweetId=1234567890&sort=Latest' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/community/get_tweets_from_all_community' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'query=elon' \
+  --data-urlencode 'queryType=Latest' \
+  --data-urlencode 'cursor='
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: tweets, has_next_page, next_cursor.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
-**Response:** `{ "replies": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get Tweet Quotes
-`GET /twitter/tweet/quotes`
-
-Get quote tweets. 20 per page, ordered by quote time desc.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweetId` | Yes | Tweet ID |
-| `cursor` | No | Pagination cursor |
-
+### get_list_followers
+- **Description:** Get followers of a list. Page size is 20.
+- **Method + Path:** `GET /twitter/list/followers`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/quotes?tweetId=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/list/followers' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'list_id=1887346801234567890' \
+  --data-urlencode 'cursor='
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: followers, has_next_page, next_cursor, status, msg.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
-**Response:** `{ "quotes": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get Tweet Retweeters
-`GET /twitter/tweet/retweeters`
-
-Get users who retweeted a tweet.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweetId` | Yes | Tweet ID |
-| `cursor` | No | Pagination cursor |
-
+### get_list_members
+- **Description:** Get members of a list. Page size is 20.
+- **Method + Path:** `GET /twitter/list/members`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/retweeters?tweetId=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/list/members' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'list_id=1887346801234567890' \
+  --data-urlencode 'cursor='
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: members, has_next_page, next_cursor, status, msg.
+- **Pagination:** cursor param: 'cursor', response field: 'next_cursor'
+- **Pricing:** See notes
 
-**Response:** `{ "users": [User, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get Tweet Thread Context
-`GET /twitter/tweet/thread_context`
-
-Get full thread context for a tweet (ancestors + descendants).
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweetId` | Yes | Tweet ID |
-| `cursor` | No | Pagination cursor |
-
+### get_space_detail
+- **Description:** Get spaces detail by space id
+- **Method + Path:** `GET /twitter/spaces/detail`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/thread_context?tweetId=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/spaces/detail' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'space_id=1887346801234567890'
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: data, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
-**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
+## Login, Webhooks & Monitoring
 
-#### Get Trends
-`GET /twitter/trends`
-
-Get current trending topics.
-
+### check_login
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/trends' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-#### Get Article
-`GET /twitter/tweet/article`
+## Profile & Safety Actions
 
-Get a long-form Twitter article. Cost: 100 credits per call.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `tweetId` | Yes | Tweet ID of the article |
-
+### update_avatar_v2
+- **Description:** Update your Twitter avatar/profile picture. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
+- **Method + Path:** `PATCH /twitter/update_avatar_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/article?tweetId=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "article": { "title": "...", "preview_text": "...", "content": "...", "author": User, ... } }`
-
----
-
-### Users
-
-#### Get User By Username
-`GET /twitter/user/info`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username (without @) |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/info?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "data": User, "status": "success" }`
-
-#### Batch Get Users By IDs
-`GET /twitter/user/batch_info_by_ids`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userIds` | Yes | Comma-separated user IDs |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/batch_info_by_ids?userIds=44196397,1234567' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "users": [User, ...] }`
-
-#### Get User About
-`GET /twitter/user/about`
-
-Get extended user profile info (highlights, affiliates, etc.).
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/about?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-#### Get User Followers
-`GET /twitter/user/followers`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username |
-| `cursor` | No | Pagination cursor |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/followers?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "followers": [User, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get User Verified Followers
-`GET /twitter/user/verified_followers`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username |
-| `cursor` | No | Pagination cursor |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/verified_followers?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "followers": [User, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get User Following
-`GET /twitter/user/followings`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username |
-| `cursor` | No | Pagination cursor |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/followings?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "followings": [User, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get User Last Tweets
-`GET /twitter/user/last_tweets`
-
-Get a user's recent tweets.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username |
-| `cursor` | No | Pagination cursor |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/last_tweets?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get User Mentions
-`GET /twitter/user/mentions`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `userName` | Yes | Twitter username |
-| `cursor` | No | Pagination cursor |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/mentions?userName=elonmusk' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Search Users
-`GET /twitter/user/search`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `query` | Yes | Search query |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/search?query=bitcoin' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-**Response:** `{ "users": [User, ...] }`
-
-#### Check Follow Relationship
-`GET /twitter/user/check_follow`
-
-⚠️ Known issue: This endpoint may return internal server errors from the API side.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `source_user_name` | Yes | Username checking if they follow |
-| `target_user_name` | Yes | Username being checked |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/check_follow?source_user_name=user1&target_user_name=user2' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
-#### Get My Account Info
-`GET /twitter/user/my_info`
-
-Get info about the logged-in account. Requires login cookies as query parameter.
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `login_cookies` | Yes | Login cookies from login endpoint |
-
-```bash
-curl 'https://api.twitterapi.io/twitter/user/my_info?login_cookies=COOKIES' \
-  -H 'x-api-key: YOUR_KEY'
-```
-
----
-
-### Tweet Actions (Write — require login)
-
-#### Create Tweet V2
-`POST /twitter/tweet`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `tweet_text` | Yes | Tweet content (max 280 chars, or longer with `is_note_tweet: true` + Twitter Premium) |
-| `proxy` | Yes | Proxy URL |
-| `reply_to_tweet_id` | No | Tweet ID to reply to |
-| `attachment_url` | No | URL to attach (for quote tweets: use original tweet URL) |
-| `community_id` | No | Community ID to post in |
-| `is_note_tweet` | No | `true` for long tweets (Premium only). **Default: false. Always send `false` explicitly if not using notes.** |
-| `media_ids` | No | Array of media IDs from upload endpoint |
-
-```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{
-    "login_cookies": "COOKIES",
-    "tweet_text": "Hello from the API!",
-    "proxy": "http://user:pass@host:port",
-    "is_note_tweet": false
+curl -X PATCH 'https://api.twitterapi.io/twitter/update_avatar_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
   }'
 ```
+- **Request body fields:** See curl example.
+- Response schema (condensed): top-level fields: status, message.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-**Response:** `{ "status": "success", "tweet_id": "1234567890" }`
-
-**Quote tweet:** Set `attachment_url` to the URL of the tweet you want to quote:
-```json
-{
-  "login_cookies": "COOKIES",
-  "tweet_text": "Great thread!",
-  "attachment_url": "https://x.com/user/status/1234567890",
-  "proxy": "http://user:pass@host:port"
-}
-```
-
-**Reply:** Set `reply_to_tweet_id`:
-```json
-{
-  "login_cookies": "COOKIES",
-  "tweet_text": "I agree!",
-  "reply_to_tweet_id": "1234567890",
-  "proxy": "http://user:pass@host:port"
-}
-```
-
-#### Delete Tweet V2
-`POST /twitter/tweet/delete`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `tweet_id` | Yes | Tweet ID to delete |
-| `proxy` | Yes | Proxy URL |
-
+### update_banner_v2
+- **Description:** Update your Twitter banner/header image. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
+- **Method + Path:** `PATCH /twitter/update_banner_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/delete' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+curl -X PATCH 'https://api.twitterapi.io/twitter/update_banner_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl example.
+- Response schema (condensed): top-level fields: status, message.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-**Response:** `{ "status": "success" }`
-
-#### Like Tweet V2
-`POST /twitter/tweet/like`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `tweet_id` | Yes | Tweet ID to like |
-| `proxy` | Yes | Proxy URL |
-
+### get_my_info
+- **Description:** Get my info
+- **Method + Path:** `GET /oapi/my/info`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/like' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+curl -G 'https://api.twitterapi.io/oapi/my/info' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: recharge_credits.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
-#### Unlike Tweet V2
-`POST /twitter/tweet/unlike`
-
-Same body as Like Tweet V2.
-
+### bookmark_tweet_v2
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/unlike' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-#### Retweet Tweet V2
-`POST /twitter/tweet/retweet`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `tweet_id` | Yes | Tweet ID to retweet |
-| `proxy` | Yes | Proxy URL |
-
+### unbookmark_tweet_v2
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/retweet' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-#### Upload Media V2
-`POST /twitter/tweet/upload_media`
-
-**Content-Type: multipart/form-data** (not JSON!)
-
-| Form Field | Required | Description |
-|------------|----------|-------------|
-| `file` | Yes | Media file (image, video) |
-| `login_cookies` | Yes | From login endpoint |
-| `proxy` | Yes | Proxy URL |
-| `is_long_video` | No | `true` for videos >2:20 (Premium only) |
-
+### block_user_v2
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/upload_media' \
-  -H 'x-api-key: YOUR_KEY' \
-  -F 'file=@image.jpg' \
-  -F 'login_cookies=COOKIES' \
-  -F 'proxy=http://user:pass@host:port'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-**Response:** `{ "status": "success", "media_id": "1234567890" }`
-
-Use `media_id` in `create_tweet_v2`'s `media_ids` array.
-
----
-
-### Account Actions (Write — require login)
-
-#### Follow User V2
-`POST /twitter/user/follow`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `user_id` | Yes | User ID to follow (not username — get ID from user lookup first) |
-| `proxy` | Yes | Proxy URL |
-
+### unblock_user_v2
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/user/follow' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","user_id":"44196397","proxy":"http://user:pass@host:port"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-#### Unfollow User V2
-`POST /twitter/user/unfollow`
-
-Same body as Follow User V2.
-
+### mute_user_v2
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/user/unfollow' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","user_id":"44196397","proxy":"http://user:pass@host:port"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
----
-
-### Direct Messages (Write — require login)
-
-#### Send DM V2
-`POST /twitter/dm/send`
-
-⚠️ Only works if recipient has DMs enabled (`canDm: true` in user profile). May fail intermittently — retry on failure.
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `user_id` | Yes | Recipient user ID |
-| `text` | Yes | Message text |
-| `proxy` | Yes | Proxy URL |
-| `media_ids` | No | Array of media IDs |
-| `reply_to_message_id` | No | Message ID to reply to |
-
+### unmute_user_v2
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/dm/send' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","user_id":"44196397","text":"Hello!","proxy":"http://user:pass@host:port"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-**Response:** `{ "status": "success", "message_id": "1234567890" }`
-
-#### Get DM History
-`GET /twitter/dm/history`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `login_cookies` | Yes | Login cookies |
-| `user_id` | Yes | User ID to get DM history with |
-
+### get_dm_history
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/dm/history?login_cookies=COOKIES&user_id=44196397' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
----
-
-### Profile Management (Write — require login)
-
-#### Update Profile V2
-`PATCH /twitter/user/update_profile`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `proxy` | Yes | Proxy URL |
-| `name` | No | Display name (max 50 chars) |
-| `description` | No | Bio (max 160 chars) |
-| `location` | No | Location (max 30 chars) |
-| `url` | No | Website URL |
-
+### get_dm_conversations
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X PATCH 'https://api.twitterapi.io/twitter/user/update_profile' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","proxy":"http://user:pass@host:port","name":"New Name","description":"New bio"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl example.
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified in live docs.
+- **Pricing:** See endpoint notes/default pricing.
 
-**Response:** `{ "status": "success", "message": "Profile updated successfully" }`
+## Other Endpoints
 
-#### Update Avatar V2
-`PATCH /twitter/user/update_avatar`
-
-**Content-Type: multipart/form-data**
-
-| Form Field | Required | Description |
-|------------|----------|-------------|
-| `file` | Yes | Image file for avatar |
-| `login_cookies` | Yes | From login endpoint |
-| `proxy` | Yes | Proxy URL |
-
+### create_tweet_v2
+- **Description:** Create a tweet.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.003 per call.
+- **Method + Path:** `POST /twitter/create_tweet_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X PATCH 'https://api.twitterapi.io/twitter/user/update_avatar' \
-  -H 'x-api-key: YOUR_KEY' \
-  -F 'file=@avatar.jpg' \
-  -F 'login_cookies=COOKIES' \
-  -F 'proxy=http://user:pass@host:port'
+curl -X POST 'https://api.twitterapi.io/twitter/create_tweet_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: tweet_id, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-#### Update Banner V2
-`PATCH /twitter/user/update_banner`
-
-Same format as Update Avatar V2.
-
+### delete_tweet_v2
+- **Description:** Delete a tweet.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.002 per call.
+- **Method + Path:** `POST /twitter/delete_tweet_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X PATCH 'https://api.twitterapi.io/twitter/user/update_banner' \
-  -H 'x-api-key: YOUR_KEY' \
-  -F 'file=@banner.jpg' \
-  -F 'login_cookies=COOKIES' \
-  -F 'proxy=http://user:pass@host:port'
+curl -X POST 'https://api.twitterapi.io/twitter/delete_tweet_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.002
 
----
-
-### Lists
-
-#### Get List Members
-`GET /twitter/list/members`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `list_id` | Yes | Twitter list ID |
-| `cursor` | No | Pagination cursor |
-
+### unlike_tweet_v2
+- **Description:** Unlike a tweet.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.002 per call.
+- **Method + Path:** `POST /twitter/unlike_tweet_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/list/members?list_id=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -X POST 'https://api.twitterapi.io/twitter/unlike_tweet_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.002
 
-**Response:** `{ "members": [User, ...], "has_next_page": true, "next_cursor": "..." }`
-
-#### Get List Followers
-`GET /twitter/list/followers`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `list_id` | Yes | Twitter list ID |
-| `cursor` | No | Pagination cursor |
-
+### retweet_tweet_v2
+- **Description:** Retweet a tweet.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.002 per call.
+- **Method + Path:** `POST /twitter/retweet_tweet_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/list/followers?list_id=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -X POST 'https://api.twitterapi.io/twitter/retweet_tweet_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.002
 
----
-
-### Spaces
-
-#### Get Space Detail
-`GET /twitter/space/detail`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `spaceId` | Yes | Twitter Space ID |
-
+### create_community_v2
+- **Description:** Create a community.You must set the login_cookies.You can get the login_cookies from /twitter/user_login_v2.Trial operation price: $0.003 per call.
+- **Method + Path:** `POST /twitter/create_community_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/space/detail?spaceId=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -X POST 'https://api.twitterapi.io/twitter/create_community_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: community_id, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
----
-
-### Communities (Write actions require login)
-
-#### Create Community V2
-`POST /twitter/community/create`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `proxy` | Yes | Proxy URL |
-| `name` | Yes | Community name |
-| `description` | No | Community description |
-
+### delete_community_v2
+- **Description:** Delete a community.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.003 per call.
+- **Method + Path:** `POST /twitter/delete_community_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/community/create' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","proxy":"http://user:pass@host:port","name":"My Community"}'
+curl -X POST 'https://api.twitterapi.io/twitter/delete_community_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-#### Delete Community V2
-`POST /twitter/community/delete`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `login_cookies` | Yes | From login endpoint |
-| `proxy` | Yes | Proxy URL |
-| `community_id` | Yes | Community ID |
-
+### join_community_v2
+- **Description:** Join a community.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.003 per call.
+- **Method + Path:** `POST /twitter/join_community_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/community/delete' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"login_cookies":"COOKIES","proxy":"http://user:pass@host:port","community_id":"1234567890"}'
+curl -X POST 'https://api.twitterapi.io/twitter/join_community_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: community_id, community_name, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-#### Join Community V2
-`POST /twitter/community/join`
-
-Same body pattern (login_cookies, proxy, community_id).
-
-#### Leave Community V2
-`POST /twitter/community/leave`
-
-Same body pattern (login_cookies, proxy, community_id).
-
-#### Get Community By ID
-`GET /twitter/community/info`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `community_id` | Yes | Community ID |
-
+### leave_community_v2
+- **Description:** Leave a community.You must set the login_cookie.You can get the login_cookie from /twitter/user_login_v2.Trial operation price: $0.003 per call.
+- **Method + Path:** `POST /twitter/leave_community_v2`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/community/info?community_id=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -X POST 'https://api.twitterapi.io/twitter/leave_community_v2' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: community_id, community_name, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** $0.003
 
-#### Get Community Tweets
-`GET /twitter/community/tweets`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `community_id` | Yes | Community ID |
-| `cursor` | No | Pagination cursor |
-
+### get_trends
+- **Description:** Get trends by woeid
+- **Method + Path:** `GET /twitter/trends`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/community/tweets?community_id=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io/twitter/trends' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'woeid=1887346801234567890' \
+  --data-urlencode 'count=20'
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: trends, status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
-#### Get All Community Tweets
-`GET /twitter/community/tweets/all`
-
-Same params as Get Community Tweets. Returns tweets from all communities.
-
-#### Get Community Members
-`GET /twitter/community/members`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `community_id` | Yes | Community ID |
-| `cursor` | No | Pagination cursor |
-
+### add_user_to_monitor_tweet
+- **Description:** Add a user to monitor real-time tweets.Monitor tweets from specified accounts, including directly sent tweets, quoted tweets, reply tweets, and retweeted tweets. Please ref:https://twitterapi.io/twitter-stream
+- **Method + Path:** `POST /oapi/x_user_stream/add_user_to_monitor_tweet`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/community/members?community_id=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -X POST 'https://api.twitterapi.io/oapi/x_user_stream/add_user_to_monitor_tweet' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
-#### Get Community Moderators
-`GET /twitter/community/moderators`
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `community_id` | Yes | Community ID |
-
+### remove_user_to_monitor_tweet
+- **Description:** Remove a user from monitor real-time tweets.Please ref:https://twitterapi.io/twitter-stream
+- **Method + Path:** `POST /oapi/x_user_stream/remove_user_to_monitor_tweet`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/community/moderators?community_id=1234567890' \
-  -H 'x-api-key: YOUR_KEY'
+curl -X POST 'https://api.twitterapi.io/oapi/x_user_stream/remove_user_to_monitor_tweet' \
+  -H 'x-api-key: $KEY' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "login_cookies": "$COOKIES"
+  }'
 ```
+- **Request body fields:** See curl
+- Response schema (condensed): top-level fields: status, msg.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
----
-
-### Webhooks
-
-#### Add Webhook Rule
-`POST /twitter/webhook/rule/add`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `query` | Yes | Twitter search query to monitor |
-| `webhook_url` | Yes | URL to receive webhook events |
-
+### get_user_to_monitor_tweet
+- **Description:** Get the list of users being monitored for real-time tweets. Returns all users that have been added for tweet monitoring. Please ref:https://twitterapi.io/twitter-stream
+- **Method + Path:** `GET /oapi/x_user_stream/get_user_to_monitor_tweet`
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/webhook/rule/add' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"query":"from:elonmusk","webhook_url":"https://your-server.com/webhook"}'
+curl -G 'https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 
 ```
+- **Request body fields:** N/A (GET)
+- Response schema (condensed): top-level fields: status, msg, data.
+- **Pagination:** Check response for next_cursor
+- **Pricing:** See notes
 
-#### Update Webhook Rule
-`POST /twitter/webhook/rule/update`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `rule_id` | Yes | Rule ID to update |
-| `query` | No | New query |
-| `webhook_url` | No | New webhook URL |
-
+### get_user_likes
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/webhook/rule/update' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"rule_id":"RULE_ID","query":"from:elonmusk lang:en"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
 
-#### Delete Webhook Rule
-`POST /twitter/webhook/rule/delete`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `rule_id` | Yes | Rule ID to delete |
-
+### create_list
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/webhook/rule/delete' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"rule_id":"RULE_ID"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
 
-#### Get Webhook Rules
-`GET /twitter/webhook/rules`
-
-List all your webhook rules.
-
+### delete_list
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/webhook/rules' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
 
----
-
-### Tweet Monitoring
-
-#### Add User to Monitor
-`POST /twitter/tweet/monitor/add`
-
-Monitor a user's tweets in real-time via webhook.
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `user_id` | Yes | Twitter user ID to monitor |
-| `webhook_url` | Yes | URL to receive events |
-
+### add_list_member
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/monitor/add' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"user_id":"44196397","webhook_url":"https://your-server.com/webhook"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
 
-#### Remove User from Monitor
-`POST /twitter/tweet/monitor/remove`
-
-| Body Field | Required | Description |
-|------------|----------|-------------|
-| `user_id` | Yes | User ID to stop monitoring |
-
+### remove_list_member
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl -X POST 'https://api.twitterapi.io/twitter/tweet/monitor/remove' \
-  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
-  -d '{"user_id":"44196397"}'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
 ```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
 
-#### Get Monitored Users
-`GET /twitter/tweet/monitor/list`
-
-List all users you're monitoring.
-
+### get_list_by_id
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
 ```bash
-curl 'https://api.twitterapi.io/twitter/tweet/monitor/list' \
-  -H 'x-api-key: YOUR_KEY'
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
+```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
+
+### get_space_tweets
+- **Description:** No description in scrape.
+- **Method + Path:** ` `
+- **Auth:** api_key
+- **Curl:**
+```bash
+curl -G 'https://api.twitterapi.io' \
+  -H 'x-api-key: $KEY'
+```
+- **Request body fields:** See curl
+- Response schema: not published in live docs (key fields unavailable).
+- **Pagination:** Not specified.
+- **Pricing:** default
+
+## Undocumented Endpoints (from Codex draft only)
+
+> ⚠️ Undocumented — may not be available. These are not present in live-scraped docs pages.
+
+### create_tweet ⚠️ Legacy — prefer v2 equivalents.
+- **Method + Path:** `POST /twitter/create_tweet`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### like_tweet ⚠️ Legacy — prefer v2 equivalents.
+- **Method + Path:** `POST /twitter/like_tweet`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### login_by_2fa ⚠️ Legacy — prefer v2 equivalents.
+- **Method + Path:** `POST /twitter/login_by_2fa`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### login_by_email_or_username ⚠️ Legacy — prefer v2 equivalents.
+- **Method + Path:** `POST /twitter/login_by_email_or_username`
+- **Auth:** api_key
+- **Status:** Not in live docs scrape; use with caution.
+
+### follow_user_v2
+- **Method + Path:** `POST /twitter/follow_user_v2`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### like_tweet_v2
+- **Method + Path:** `POST /twitter/like_tweet_v2`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### send_dm_v2
+- **Method + Path:** `POST /twitter/send_dm_to_user`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### unfollow_user_v2
+- **Method + Path:** `POST /twitter/unfollow_user_v2`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### upload_media_v2
+- **Method + Path:** `POST /twitter/upload_media_v2`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### update_profile_v2
+- **Method + Path:** `PATCH /twitter/update_profile_v2`
+- **Auth:** api_key + login_cookies
+- **Status:** Not in live docs scrape; use with caution.
+
+### get_article
+- **Method + Path:** `GET /twitter/article`
+- **Auth:** api_key
+- **Status:** Not in live docs scrape; use with caution.
+
+## Workflow Recipes
+
+### Recipe 1: Login → Post Tweet with Media
+```bash
+# 1. Login
+COOKIES=$(curl -s -X POST 'https://api.twitterapi.io/twitter/user_login_v2' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d '{"email":"you@mail.com","password":"***","two_factor_secret":"JBSWY3DPEHPK3PXP","proxy":"http://user:pass@proxy:8080"}' \
+  | jq -r '.login_cookies')
+
+# 2. Upload media
+MEDIA_ID=$(curl -s -X POST 'https://api.twitterapi.io/twitter/upload_media_v2' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d "{"login_cookies":"$COOKIES","media_url":"https://example.com/image.jpg","proxy":"http://user:pass@proxy:8080"}" \
+  | jq -r '.media_id')
+
+# 3. Create tweet with media
+curl -X POST 'https://api.twitterapi.io/twitter/create_tweet_v2' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d "{"login_cookies":"$COOKIES","tweet_text":"Hello world!","media_ids":["$MEDIA_ID"]}"
 ```
 
----
+### Recipe 2: Search → Engage (like + retweet)
+```bash
+# 1. Search
+TWEET_ID=$(curl -s -G 'https://api.twitterapi.io/twitter/tweet/advanced_search' \
+  -H 'x-api-key: $KEY' \
+  --data-urlencode 'query=bitcoin lang:en' \
+  --data-urlencode 'queryType=Latest' | jq -r '.tweets[0].id')
 
-## Common Workflows
+# 2. Like
+curl -X POST 'https://api.twitterapi.io/twitter/like_tweet_v2' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d "{"login_cookies":"$COOKIES","tweet_id":"$TWEET_ID"}"
 
-### Post a tweet with image
-```
-1. POST /twitter/user_login_v2 → get login_cookies
-2. POST /twitter/tweet/upload_media → get media_id
-3. POST /twitter/tweet → { login_cookies, tweet_text, media_ids: [media_id], proxy }
-```
-
-### Quote tweet
-```
-1. POST /twitter/tweet → { login_cookies, tweet_text: "My comment", attachment_url: "https://x.com/user/status/TWEET_ID", proxy }
-```
-
-### Reply to a tweet
-```
-1. POST /twitter/tweet → { login_cookies, tweet_text: "My reply", reply_to_tweet_id: "TWEET_ID", proxy }
+# 3. Retweet
+curl -X POST 'https://api.twitterapi.io/twitter/retweet_tweet_v2' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d "{"login_cookies":"$COOKIES","tweet_id":"$TWEET_ID"}"
 ```
 
-### Search and like top tweets
-```
-1. GET /twitter/tweet/advanced_search?query=bitcoin&queryType=Latest → get tweet IDs
-2. POST /twitter/tweet/like → { login_cookies, tweet_id, proxy } (for each tweet)
-```
-
-### Follow users who tweet about a topic
-```
-1. GET /twitter/tweet/advanced_search?query=bitcoin → get author IDs from tweets
-2. GET /twitter/user/info?userName=AUTHOR → get user_id
-3. POST /twitter/user/follow → { login_cookies, user_id, proxy }
-```
-
-### Re-login on auth failure
-```
-If any write endpoint returns { "status": "error" } with auth-related message:
-1. POST /twitter/user_login_v2 → get fresh login_cookies
-2. Retry the failed request with new cookies
+### Recipe 3: Paginate Through User's Followers
+```bash
+CURSOR=""
+while true; do
+  RESP=$(curl -s -G 'https://api.twitterapi.io/twitter/user/followers' \
+    -H 'x-api-key: $KEY' \
+    --data-urlencode 'userName=elonmusk' \
+    --data-urlencode "cursor=$CURSOR")
+  echo "$RESP" | jq '.followers[].userName'
+  HAS_NEXT=$(echo "$RESP" | jq -r '.has_next_page')
+  [ "$HAS_NEXT" != "true" ] && break
+  CURSOR=$(echo "$RESP" | jq -r '.next_cursor')
+done
 ```
 
----
+### Recipe 4: Monitor Account Tweets (Streaming)
+```bash
+# 1. Add user to monitor
+curl -X POST 'https://api.twitterapi.io/oapi/x_user_stream/add_user_to_monitor_tweet' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d '{"userScreenName":"elonmusk"}'
 
-## Notes
+# 2. Set up webhook to receive tweets
+curl -X POST 'https://api.twitterapi.io/oapi/tweet_filter/add_rule' \
+  -H 'x-api-key: $KEY' -H 'Content-Type: application/json' \
+  -d '{"rule":"from:elonmusk","tag":"elon-tweets","webhook_url":"https://your-server.com/webhook"}'
+```
 
-- **Proxy is required** for all write actions. Use residential proxies for best reliability. Always use the same proxy for login and subsequent actions.
-- **2FA is strongly recommended** for login. Without it, cookies may be unreliable.
-- **`is_note_tweet: false`** should always be sent explicitly when posting normal tweets. Omitting it may cause errors.
-- **Response body `null`** on some write endpoints (like retweet) with HTTP 200 = success.
-- **Search operators** only work with `queryType=Latest`. Operators include: `from:`, `to:`, `lang:`, `min_faves:`, `min_retweets:`, `since:`, `until:`, `-filter:replies`, `filter:links`, etc.
-- **Community endpoints** use `login_cookies` (plural), same as all other v2 endpoints.
-- **Rate limits** are global per API key. Spread requests across time to avoid 429 errors.
-- **Minimum charge** of $0.00015 applies even to requests that return no data.
+## Pricing Appendix
 
----
+100,000 credits = $1 USD. Minimum charge: 15 credits ($0.00015) per request.
 
-*Source: [docs.twitterapi.io](https://docs.twitterapi.io) — Last verified: February 2026*
+### Read Endpoints (API key only)
+| Endpoint | Cost |
+|----------|------|
+| `tweet_advanced_search` | 15 credits/tweet returned |
+| `get_tweet_by_ids` | 15 credits/tweet |
+| `get_tweet_replies` / `v2` | 15 credits/tweet returned |
+| `get_tweet_quote` | 15 credits/tweet returned |
+| `get_tweet_retweeter` | 15 credits/user returned |
+| `get_tweet_thread_context` | 15 credits/tweet |
+| `get_user_by_username` | 18 credits/user |
+| `batch_get_user_by_userids` | 18 credits/user (bulk 100+: 10 credits) |
+| `get_user_last_tweets` | 15 credits/tweet returned |
+| `get_user_followers` | 15 credits/follower returned |
+| `get_user_followings` | 15 credits/following returned |
+| `get_user_verified_followers` | $0.30 per 1000 followers |
+| `get_user_mention` | 15 credits/tweet returned |
+| `get_user_about` | 18 credits/user |
+| `search_user` | 18 credits/user returned |
+| `get_trends` | 150 credits/call |
+| `check_follow_relationship` | 100 credits/call |
+| `get_article` | 100 credits/article |
+| `get_community_by_id` | 20 credits/call |
+| `get_community_tweets` | 15 credits/tweet returned |
+| `get_community_members` | 15 credits/member returned |
+| `get_list_members` | 150 credits/call |
+| `get_list_followers` | 150 credits/call |
+| `get_space_detail` | 150 credits/call |
+
+### Write Endpoints (login_cookies required)
+| Endpoint | Cost |
+|----------|------|
+| `create_tweet_v2` | $0.003/call |
+| `delete_tweet_v2` | $0.002/call |
+| `like_tweet_v2` | $0.002/call |
+| `unlike_tweet_v2` | $0.002/call |
+| `retweet_tweet_v2` | $0.002/call |
+| `follow_user_v2` | $0.002/call |
+| `unfollow_user_v2` | $0.002/call |
+| `send_dm_v2` | $0.003/call |
+| `upload_media_v2` | $0.003/call |
+| `update_profile_v2` | $0.003/call |
+| `update_avatar_v2` | $0.003/call |
+| `update_banner_v2` | $0.003/call |
+| `user_login_v2` | $0.003/call |
+| `create_community_v2` | $0.003/call |
+| `delete_community_v2` | $0.003/call |
+| `join_community_v2` | $0.003/call |
+| `leave_community_v2` | $0.003/call |
+
+### QPS by Plan
+| Credits | QPS |
+|---------|-----|
+| Free | 1 req/5s |
+| 1,000 | 3 |
+| 5,000 | 6 |
+| 10,000 | 10 |
+| 50,000 | 20 |
