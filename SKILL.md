@@ -334,8 +334,7 @@ Check if the user is following/followed by the target user. Trial operation pric
 
 `GET /twitter/user/check_follow_relationship`
 
-> **Params:** `userName` (required), `targetUserName` (required)
-> ⚠️ This endpoint may return "internal error" — known API-side issue as of Feb 2026.
+> **Params:** `source_user_name` (required), `target_user_name` (required)
 
 ```bash
 curl --request GET \
