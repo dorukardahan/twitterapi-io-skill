@@ -1,1034 +1,1134 @@
 ---
 name: twitterapi-io
-version: 2.1.0
+version: 3.0.0
 description: >-
-  Use Twitter/X API via TwitterAPI.io. 59 endpoints — search, post, like,
-  retweet, follow, DM, communities, webhooks, profile management. No Twitter dev account needed.
+  Use Twitter/X API via TwitterAPI.io. 52 live endpoints — search, post, like,
+  retweet, follow, DM, communities, webhooks, lists, spaces, profile management.
+  No Twitter developer account needed. Works with any LLM.
 homepage: https://twitterapi.io
 ---
 
-# TwitterAPI.io — Twitter/X API for AI
+# TwitterAPI.io — Complete Twitter/X API Reference
 
-You can use Twitter/X through TwitterAPI.io. This file teaches you how.
+Use Twitter/X through [TwitterAPI.io](https://twitterapi.io). This file contains everything you need to construct working API calls.
+
+## Quick Start
+
+```bash
+# 1. Search tweets (read-only, no login needed)
+curl 'https://api.twitterapi.io/twitter/tweet/advanced_search?query=bitcoin&queryType=Latest' \
+  -H 'x-api-key: YOUR_KEY'
+
+# 2. Login (required for write actions)
+curl -X POST 'https://api.twitterapi.io/twitter/user_login_v2' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"user_name":"USER","password":"PASS","email":"EMAIL","totp_secret":"2FA_SECRET","proxy":"http://user:pass@host:port"}'
+
+# 3. Post tweet (needs login_cookies from step 2)
+curl -X POST 'https://api.twitterapi.io/twitter/tweet' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES_FROM_LOGIN","tweet_text":"Hello world!","proxy":"http://user:pass@host:port"}'
+```
+
+---
 
 ## Base URL
 
-`https://api.twitterapi.io`
-
-## Auth
-
-Every request needs the `x-api-key` header:
-
 ```
-x-api-key: YOUR_TWITTERAPI_KEY
+https://api.twitterapi.io
 ```
 
-Get your key: https://twitterapi.io/dashboard
+## Authentication
 
-## Cost
+Every request requires the `x-api-key` header:
 
-| Operation | Cost |
-|-----------|------|
-| Read 1 tweet | $0.00015 |
-| Read 1 profile | $0.00018 |
-| Post tweet | $0.003 |
-| Like/unlike | $0.002 |
-| Retweet | $0.002 |
-| Follow/unfollow | $0.002 |
-| Search (per page) | $0.00015 |
+```
+x-api-key: YOUR_API_KEY
+```
+
+Get your key: https://twitterapi.io/dashboard ($0.10 free credits, no credit card needed)
+
+## Pricing
+
+| Operation | Cost per call | Notes |
+|-----------|--------------|-------|
+| Tweet search (per page) | $0.00015 | ~20 tweets/page |
+| User profile lookup | $0.00018 | Per user |
+| Followers/following list | $0.00015 | Per page |
+| User tweets/mentions | $0.00015 | Per page |
+| Tweet by ID | $0.00015 | Comma-separated batch supported |
+| Tweet replies | $0.00015 | Per page |
+| Post tweet | $0.003 | Requires login |
+| Delete tweet | $0.002 | Requires login |
+| Like/Unlike tweet | $0.002 | Requires login |
+| Retweet | $0.002 | Requires login |
+| Follow/Unfollow | $0.002 | Requires login |
+| Send DM | $0.003 | Requires login |
+| Upload media | $0.003 | multipart/form-data |
+| Update profile/avatar/banner | $0.003 | Requires login |
+| Login | $0.003 | Returns cookies |
+| Get article | 100 credits | Long-form Twitter articles |
+| Verified followers | $0.0003 | Per page |
+| Communities | $0.002 | Write actions |
+| Webhooks | Varies | See endpoint details |
+
+Minimum charge: $0.00015 per request, even if no data returned.
 
 ## Rate Limits
 
-| Plan | QPS |
-|------|-----|
-| Free | 1 req/5s |
+| Plan | QPS (queries/sec) |
+|------|--------------------|
+| Free tier | 1 req / 5 seconds |
 | $10/mo | 3/s |
 | $50/mo | 6/s |
 | $100/mo | 10/s |
 | $500/mo | 20/s |
 
+Rate limits are per API key, across all endpoints.
+
 ## Pagination
 
-List endpoints return:
+Most list endpoints use cursor-based pagination:
+
 ```json
-{ "has_next_page": true, "next_cursor": "abc123" }
+{
+  "has_next_page": true,
+  "next_cursor": "DAABCgABGRT..."
+}
 ```
-Pass `cursor=abc123` to get next page.
 
-## Login (required for write actions)
+To get the next page, pass `cursor=<next_cursor>` as a query parameter. Continue until `has_next_page` is `false` or `next_cursor` is empty.
 
-Before posting, liking, retweeting, etc., you need login cookies:
+Page sizes vary by endpoint (typically 20 items).
+
+## Error Handling
+
+All responses include `status` and `msg` (or `message`) fields:
+
+```json
+{"status": "success", "msg": ""}
+{"status": "error", "msg": "Invalid API key"}
+```
+
+| HTTP Status | Meaning | Action |
+|-------------|---------|--------|
+| 200 | Success | Parse response body |
+| 401 | Invalid/expired API key | Check your key |
+| 403 | Account restricted or forbidden | Check account status |
+| 429 | Rate limited | Wait and retry (respect QPS limits) |
+| 500 | Server error | Retry with exponential backoff |
+
+For write actions, also check `status` field in response body — HTTP 200 with `"status": "error"` means the action failed (e.g., expired cookies, banned account).
+
+## Login (Required for Write Actions)
+
+All write endpoints (post, like, retweet, follow, DM, profile, communities) require `login_cookies` obtained from the login endpoint.
+
+### Login Flow
 
 ```bash
-curl -X POST https://api.twitterapi.io/twitter/user_login_v2 \
-  -H "x-api-key: $KEY" \
-  -H "Content-Type: application/json" \
+curl -X POST 'https://api.twitterapi.io/twitter/user_login_v2' \
+  -H 'x-api-key: YOUR_KEY' \
+  -H 'Content-Type: application/json' \
   -d '{
-    "user_name": "USERNAME",
-    "password": "PASSWORD",
-    "email": "EMAIL",
-    "totp_secret": "TOTP_SECRET_IF_2FA",
+    "user_name": "your_twitter_handle",
+    "email": "your_email@example.com",
+    "password": "your_password",
+    "totp_secret": "YOUR_2FA_SECRET",
     "proxy": "http://user:pass@host:port"
   }'
 ```
 
-Response: `{ "status": "success", "login_cookies": "..." }`
+**Parameters:**
+- `user_name` (required): Twitter username
+- `email` (required): Account email
+- `password` (required): Account password
+- `proxy` (required): Residential proxy URL — format `http://user:pass@host:port`
+- `totp_secret` (optional but strongly recommended): 2FA TOTP secret key. Without it, cookies may be unreliable. To get it: enable 2FA on Twitter → select "can't scan QR code" → Twitter gives you a 10+ character string.
 
-Save `login_cookies` — use it in all write endpoints.
-Cookies expire after ~45 minutes. Re-login when you get auth errors.
-Proxy is recommended for write actions to avoid IP bans.
+**Response:**
+```json
+{
+  "status": "success",
+  "login_cookies": "BASE64_ENCODED_COOKIES_STRING"
+}
+```
 
+**Cookie lifetime:** With residential proxies and healthy accounts, cookies remain valid indefinitely. Re-login if you get auth errors from write endpoints.
+
+**Important:** Always use the same proxy for login and subsequent write actions.
+
+## Auth Field Reference
+
+All v2 write endpoints use the same auth pattern:
+
+| Field | Value | Source |
+|-------|-------|--------|
+| `login_cookies` | String from login response | `POST /twitter/user_login_v2` |
+| `proxy` | `http://user:pass@host:port` | Your proxy provider |
+
+Communities endpoints also use `login_cookies` (not `login_cookie` — always plural).
 
 ---
 
-## Search & Read
+## Response Schemas
 
-### Tweet Advanced Search
-Advanced search for tweets. Each page returns up to 20 replies(Sometimes less than 20,because we will filter out ads or other not  tweets). Use cursor for pagination.
+### Tweet Object
+Returned by search, get-by-id, replies, quotes, thread endpoints:
 
+```json
+{
+  "type": "tweet",
+  "id": "1234567890",
+  "url": "https://x.com/user/status/1234567890",
+  "text": "Tweet content here",
+  "source": "Twitter Web App",
+  "retweetCount": 5,
+  "replyCount": 2,
+  "likeCount": 10,
+  "quoteCount": 1,
+  "viewCount": 500,
+  "bookmarkCount": 3,
+  "createdAt": "Wed Feb 12 10:00:00 +0000 2026",
+  "lang": "en",
+  "isReply": false,
+  "inReplyToId": null,
+  "conversationId": "1234567890",
+  "inReplyToUserId": null,
+  "inReplyToUsername": null,
+  "author": { "...User Object..." },
+  "entities": {
+    "hashtags": [{"text": "bitcoin", "indices": [0, 8]}],
+    "urls": [{"display_url": "...", "expanded_url": "...", "url": "..."}],
+    "user_mentions": [{"id_str": "...", "name": "...", "screen_name": "..."}]
+  },
+  "quoted_tweet": null,
+  "retweeted_tweet": null
+}
+```
+
+### User Object
+Returned by user lookup, followers, following, search-user endpoints:
+
+```json
+{
+  "type": "user",
+  "id": "1234567890",
+  "userName": "example_user",
+  "name": "Example User",
+  "url": "https://x.com/example_user",
+  "profilePicture": "https://pbs.twimg.com/...",
+  "coverPicture": "https://pbs.twimg.com/...",
+  "description": "Bio text here",
+  "location": "New York",
+  "followers": 1000,
+  "following": 500,
+  "statusesCount": 2500,
+  "favouritesCount": 5000,
+  "mediaCount": 100,
+  "createdAt": "Mon Jan 01 00:00:00 +0000 2020",
+  "isBlueVerified": true,
+  "verifiedType": "Business",
+  "canDm": true,
+  "isAutomated": false,
+  "automatedBy": null,
+  "pinnedTweetIds": ["1234567890"],
+  "possiblySensitive": false
+}
+```
+
+### Write Action Response
+Returned by post, like, retweet, follow, delete, DM endpoints:
+
+```json
+{
+  "status": "success",
+  "msg": ""
+}
+```
+
+Some write endpoints return additional fields:
+- `create_tweet_v2`: `"tweet_id": "1234567890"`
+- `upload_media_v2`: `"media_id": "1234567890"`
+- `send_dm_v2`: `"message_id": "1234567890"`
+
+---
+
+## Endpoints
+
+### Search & Read
+
+#### Tweet Advanced Search
 `GET /twitter/tweet/advanced_search`
 
-> **Params:** `query` (required, supports Twitter search operators), `queryType` (Top/Latest, default Top). Optional: `cursor`
+Search tweets using Twitter search operators. Returns ~20 tweets per page.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `query` | Yes | Search query (supports operators: `from:`, `to:`, `lang:`, `min_faves:`, `since:`, `until:`, `-filter:replies`, etc.) |
+| `queryType` | No | `Top` (default) or `Latest`. **Note:** Some operators like `min_faves:` only work with `queryType=Latest` |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweet/advanced_search \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/advanced_search?query=(from:elonmusk)%20lang:en&queryType=Latest' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Tweet By Ids
-get tweet by tweet ids
+**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
+#### Get Tweet By IDs
 `GET /twitter/tweets`
 
-> **Params:** `tweet_ids` (required, comma-separated tweet IDs)
+Fetch one or more tweets by ID.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweet_ids` | Yes | Comma-separated tweet IDs |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweets \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweets?tweet_ids=1234567890,9876543210' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Tweet Reply
-get tweet replies by tweet id. Each page returns up to 20 replies(Sometimes less than 20,because we will filter out ads or other not  tweets). Use cursor for pagination. Order by reply time desc
+**Response:** `{ "tweets": [Tweet, ...] }`
 
+#### Get Tweet Replies
 `GET /twitter/tweet/replies`
 
-> **Params:** `tweetId` (required). Optional: `cursor`
+Get replies to a tweet. Ordered by reply time desc. ~20 per page.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweetId` | Yes | Tweet ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweet/replies \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/replies?tweetId=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Tweet Replies V2
-Get tweet replies by tweet id (V2). Each page returns up to 20 replies. Use cursor for pagination. Supports sorting by Relevance, Latest, or Likes.
+**Response:** `{ "replies": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
+#### Get Tweet Replies V2
 `GET /twitter/tweet/replies/v2`
 
-> **Params:** `tweetId` (required). Optional: `cursor`, `sort` (Relevance/Latest/Likes)
+V2 replies with sorting. ~20 per page.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweetId` | Yes | Tweet ID |
+| `sort` | No | `Relevance` (default), `Latest`, or `Likes` |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweet/replies/v2 \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/replies/v2?tweetId=1234567890&sort=Latest' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Tweet Quote
-get tweet quotes by tweet id. Each page returns exactly 20 quotes. Use cursor for pagination. Order by quote time desc
+**Response:** `{ "replies": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
+#### Get Tweet Quotes
 `GET /twitter/tweet/quotes`
 
-> **Params:** `tweetId` (required). Optional: `cursor`
+Get quote tweets. 20 per page, ordered by quote time desc.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweetId` | Yes | Tweet ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweet/quotes \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/quotes?tweetId=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Tweet Thread Context
-Get the thread context of a tweet. Suppose a tweet thread consists of t1, t2 (replying to t1), t3 (replying to t2), and t4, t5, t6 (all replying to t3). If we provide an API where you input t3 and receive t1, t2, t3, t4, t5, t6. Pagination is supported. The pagination size cannot be set (due to Twitter's limitations), and the data returned per page is not fixed.
+**Response:** `{ "quotes": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
-`GET /twitter/tweet/thread_context`
-
-> **Params:** `tweetId` (required). Optional: `cursor`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweet/thread_context \
-  --header 'X-API-Key: $KEY'
-```
-
-### Get Tweet Retweeter
-get tweet retweeters by tweet id. Each page returns about 100 retweeters. Use cursor for pagination. Order by retweet time desc
-
+#### Get Tweet Retweeters
 `GET /twitter/tweet/retweeters`
 
-> **Params:** `tweetId` (required). Optional: `cursor`
+Get users who retweeted a tweet.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweetId` | Yes | Tweet ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/tweet/retweeters \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/retweeters?tweetId=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Article
-get article by tweet id. cost 100 credit per article
+**Response:** `{ "users": [User, ...], "has_next_page": true, "next_cursor": "..." }`
 
-`GET /twitter/article`
+#### Get Tweet Thread Context
+`GET /twitter/tweet/thread_context`
 
-> **Params:** `tweet_id` (required). Cost: 100 credits
+Get full thread context for a tweet (ancestors + descendants).
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweetId` | Yes | Tweet ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/article \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/thread_context?tweetId=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Trends
-Get trends by woeid
+**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
+#### Get Trends
 `GET /twitter/trends`
 
-> **Params:** `woeid` (required — 1=worldwide, 23424977=US, 23424969=Turkey)
+Get current trending topics.
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/trends \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/trends' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get User Last Tweets
-Retrieve tweets by user name. Sort by created_at. Results are paginated, with each page returning up to 20 tweets. If you only need to fetch the latest tweets from a single user very frequently, do not use this API—it will cost you a lot. Instead, please refer to https://twitterapi. io/blog/how-to-monitor-twitter-accounts-for-new-tweets-in-real-time. If you have more than 20 Twitter accounts requiring real-time tweet updates, use https://twitterapi. io/twitter-stream which is the most cost-effective solution.
+#### Get Article
+`GET /twitter/tweet/article`
 
-`GET /twitter/user/last_tweets`
+Get a long-form Twitter article. Cost: 100 credits per call.
 
-> **Params:** `userName` (required). Optional: `cursor`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tweetId` | Yes | Tweet ID of the article |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/last_tweets \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/tweet/article?tweetId=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get User Mention
-get tweet mentions by user screen name. Each page returns exactly 20 mentions. Use cursor for pagination. Order by mention time desc
-
-`GET /twitter/user/mentions`
-
-> **Params:** `userId` (required). Optional: `cursor`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/mentions \
-  --header 'X-API-Key: $KEY'
-```
-
+**Response:** `{ "article": { "title": "...", "preview_text": "...", "content": "...", "author": User, ... } }`
 
 ---
 
-## Users
+### Users
 
-### Get User By Username
-Get user info by screen name
-
+#### Get User By Username
 `GET /twitter/user/info`
 
-> **Params:** `userName` (required)
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username (without @) |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/info \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/info?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Batch Get User By Userids
-Batch get user info by user ids. Pricing:
+**Response:** `{ "data": User, "status": "success" }`
 
+#### Batch Get Users By IDs
 `GET /twitter/user/batch_info_by_ids`
 
-> **Params:** `userIds` (required, comma-separated)
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userIds` | Yes | Comma-separated user IDs |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/batch_info_by_ids \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/batch_info_by_ids?userIds=44196397,1234567' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get User About
-Get user profile about by screen name
+**Response:** `{ "users": [User, ...] }`
 
-`GET /twitter/user_about`
+#### Get User About
+`GET /twitter/user/about`
+
+Get extended user profile info (highlights, affiliates, etc.).
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user_about \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/about?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get My Info
-Get my info
-
-`GET /oapi/my/info`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/oapi/my/info \
-  --header 'X-API-Key: $KEY'
-```
-
-### Search User
-Search user by keyword
-
-`GET /twitter/user/search`
-
-> **Params:** `query` (required). Optional: `cursor`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/search \
-  --header 'X-API-Key: $KEY'
-```
-
-### Get User Followers
-Get user followers in reverse chronological order (newest first). Returns exactly 200 followers per page, sorted by follow date. Most recent followers appear on the first page. Use cursor for pagination through the complete followers list.
-
+#### Get User Followers
 `GET /twitter/user/followers`
 
-> **Params:** `userName` (required). Optional: `cursor`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/followers \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/followers?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get User Followings
-Get user followings. Each page returns exactly 200 followings. Use cursor for pagination. Sorted by follow date. Most recent followings appear on the first page.
+**Response:** `{ "followers": [User, ...], "has_next_page": true, "next_cursor": "..." }`
 
+#### Get User Verified Followers
+`GET /twitter/user/verified_followers`
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username |
+| `cursor` | No | Pagination cursor |
+
+```bash
+curl 'https://api.twitterapi.io/twitter/user/verified_followers?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
+```
+
+**Response:** `{ "followers": [User, ...], "has_next_page": true, "next_cursor": "..." }`
+
+#### Get User Following
 `GET /twitter/user/followings`
 
-> **Params:** `userName` (required). Optional: `cursor`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/followings \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/followings?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get User Verified Followers
-Get user verified followers in reverse chronological order (newest first). Returns exactly 20 verified followers per page, sorted by follow date. Most recent followers appear on the first page. Use cursor for pagination through the complete followers list.$0.3 per 1000 followers
+**Response:** `{ "followings": [User, ...], "has_next_page": true, "next_cursor": "..." }`
 
-`GET /twitter/user/verifiedFollowers`
+#### Get User Last Tweets
+`GET /twitter/user/last_tweets`
+
+Get a user's recent tweets.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/verifiedFollowers \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/last_tweets?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Check Follow Relationship
-Check if the user is following/followed by the target user. Trial operation price: 100 credits per call.
+**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
-`GET /twitter/user/check_follow_relationship`
+#### Get User Mentions
+`GET /twitter/user/mentions`
 
-> **Params:** `source_user_name` (required), `target_user_name` (required)
+| Param | Required | Description |
+|-------|----------|-------------|
+| `userName` | Yes | Twitter username |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/check_follow_relationship \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/mentions?userName=elonmusk' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get List Followers
-Get followers of a list. Page size is 20.
+**Response:** `{ "tweets": [Tweet, ...], "has_next_page": true, "next_cursor": "..." }`
 
-`GET /twitter/list/followers`
+#### Search Users
+`GET /twitter/user/search`
 
-> **Params:** `list_id` (required). Optional: `cursor`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `query` | Yes | Search query |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/list/followers \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/user/search?query=bitcoin' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get List Members
-Get members of a list. Page size is 20.
+**Response:** `{ "users": [User, ...] }`
 
+#### Check Follow Relationship
+`GET /twitter/user/check_follow`
+
+⚠️ Known issue: This endpoint may return internal server errors from the API side.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `source_user_name` | Yes | Username checking if they follow |
+| `target_user_name` | Yes | Username being checked |
+
+```bash
+curl 'https://api.twitterapi.io/twitter/user/check_follow?source_user_name=user1&target_user_name=user2' \
+  -H 'x-api-key: YOUR_KEY'
+```
+
+#### Get My Account Info
+`GET /twitter/user/my_info`
+
+Get info about the logged-in account. Requires login cookies as query parameter.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `login_cookies` | Yes | Login cookies from login endpoint |
+
+```bash
+curl 'https://api.twitterapi.io/twitter/user/my_info?login_cookies=COOKIES' \
+  -H 'x-api-key: YOUR_KEY'
+```
+
+---
+
+### Tweet Actions (Write — require login)
+
+#### Create Tweet V2
+`POST /twitter/tweet`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `tweet_text` | Yes | Tweet content (max 280 chars, or longer with `is_note_tweet: true` + Twitter Premium) |
+| `proxy` | Yes | Proxy URL |
+| `reply_to_tweet_id` | No | Tweet ID to reply to |
+| `attachment_url` | No | URL to attach (for quote tweets: use original tweet URL) |
+| `community_id` | No | Community ID to post in |
+| `is_note_tweet` | No | `true` for long tweets (Premium only). **Default: false. Always send `false` explicitly if not using notes.** |
+| `media_ids` | No | Array of media IDs from upload endpoint |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{
+    "login_cookies": "COOKIES",
+    "tweet_text": "Hello from the API!",
+    "proxy": "http://user:pass@host:port",
+    "is_note_tweet": false
+  }'
+```
+
+**Response:** `{ "status": "success", "tweet_id": "1234567890" }`
+
+**Quote tweet:** Set `attachment_url` to the URL of the tweet you want to quote:
+```json
+{
+  "login_cookies": "COOKIES",
+  "tweet_text": "Great thread!",
+  "attachment_url": "https://x.com/user/status/1234567890",
+  "proxy": "http://user:pass@host:port"
+}
+```
+
+**Reply:** Set `reply_to_tweet_id`:
+```json
+{
+  "login_cookies": "COOKIES",
+  "tweet_text": "I agree!",
+  "reply_to_tweet_id": "1234567890",
+  "proxy": "http://user:pass@host:port"
+}
+```
+
+#### Delete Tweet V2
+`POST /twitter/tweet/delete`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `tweet_id` | Yes | Tweet ID to delete |
+| `proxy` | Yes | Proxy URL |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/delete' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+```
+
+**Response:** `{ "status": "success" }`
+
+#### Like Tweet V2
+`POST /twitter/tweet/like`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `tweet_id` | Yes | Tweet ID to like |
+| `proxy` | Yes | Proxy URL |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/like' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+```
+
+#### Unlike Tweet V2
+`POST /twitter/tweet/unlike`
+
+Same body as Like Tweet V2.
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/unlike' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+```
+
+#### Retweet Tweet V2
+`POST /twitter/tweet/retweet`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `tweet_id` | Yes | Tweet ID to retweet |
+| `proxy` | Yes | Proxy URL |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/retweet' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","tweet_id":"1234567890","proxy":"http://user:pass@host:port"}'
+```
+
+#### Upload Media V2
+`POST /twitter/tweet/upload_media`
+
+**Content-Type: multipart/form-data** (not JSON!)
+
+| Form Field | Required | Description |
+|------------|----------|-------------|
+| `file` | Yes | Media file (image, video) |
+| `login_cookies` | Yes | From login endpoint |
+| `proxy` | Yes | Proxy URL |
+| `is_long_video` | No | `true` for videos >2:20 (Premium only) |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/upload_media' \
+  -H 'x-api-key: YOUR_KEY' \
+  -F 'file=@image.jpg' \
+  -F 'login_cookies=COOKIES' \
+  -F 'proxy=http://user:pass@host:port'
+```
+
+**Response:** `{ "status": "success", "media_id": "1234567890" }`
+
+Use `media_id` in `create_tweet_v2`'s `media_ids` array.
+
+---
+
+### Account Actions (Write — require login)
+
+#### Follow User V2
+`POST /twitter/user/follow`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `user_id` | Yes | User ID to follow (not username — get ID from user lookup first) |
+| `proxy` | Yes | Proxy URL |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/user/follow' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","user_id":"44196397","proxy":"http://user:pass@host:port"}'
+```
+
+#### Unfollow User V2
+`POST /twitter/user/unfollow`
+
+Same body as Follow User V2.
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/user/unfollow' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","user_id":"44196397","proxy":"http://user:pass@host:port"}'
+```
+
+---
+
+### Direct Messages (Write — require login)
+
+#### Send DM V2
+`POST /twitter/dm/send`
+
+⚠️ Only works if recipient has DMs enabled (`canDm: true` in user profile). May fail intermittently — retry on failure.
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `user_id` | Yes | Recipient user ID |
+| `text` | Yes | Message text |
+| `proxy` | Yes | Proxy URL |
+| `media_ids` | No | Array of media IDs |
+| `reply_to_message_id` | No | Message ID to reply to |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/dm/send' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","user_id":"44196397","text":"Hello!","proxy":"http://user:pass@host:port"}'
+```
+
+**Response:** `{ "status": "success", "message_id": "1234567890" }`
+
+#### Get DM History
+`GET /twitter/dm/history`
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `login_cookies` | Yes | Login cookies |
+| `user_id` | Yes | User ID to get DM history with |
+
+```bash
+curl 'https://api.twitterapi.io/twitter/dm/history?login_cookies=COOKIES&user_id=44196397' \
+  -H 'x-api-key: YOUR_KEY'
+```
+
+---
+
+### Profile Management (Write — require login)
+
+#### Update Profile V2
+`PATCH /twitter/user/update_profile`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `proxy` | Yes | Proxy URL |
+| `name` | No | Display name (max 50 chars) |
+| `description` | No | Bio (max 160 chars) |
+| `location` | No | Location (max 30 chars) |
+| `url` | No | Website URL |
+
+```bash
+curl -X PATCH 'https://api.twitterapi.io/twitter/user/update_profile' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","proxy":"http://user:pass@host:port","name":"New Name","description":"New bio"}'
+```
+
+**Response:** `{ "status": "success", "message": "Profile updated successfully" }`
+
+#### Update Avatar V2
+`PATCH /twitter/user/update_avatar`
+
+**Content-Type: multipart/form-data**
+
+| Form Field | Required | Description |
+|------------|----------|-------------|
+| `file` | Yes | Image file for avatar |
+| `login_cookies` | Yes | From login endpoint |
+| `proxy` | Yes | Proxy URL |
+
+```bash
+curl -X PATCH 'https://api.twitterapi.io/twitter/user/update_avatar' \
+  -H 'x-api-key: YOUR_KEY' \
+  -F 'file=@avatar.jpg' \
+  -F 'login_cookies=COOKIES' \
+  -F 'proxy=http://user:pass@host:port'
+```
+
+#### Update Banner V2
+`PATCH /twitter/user/update_banner`
+
+Same format as Update Avatar V2.
+
+```bash
+curl -X PATCH 'https://api.twitterapi.io/twitter/user/update_banner' \
+  -H 'x-api-key: YOUR_KEY' \
+  -F 'file=@banner.jpg' \
+  -F 'login_cookies=COOKIES' \
+  -F 'proxy=http://user:pass@host:port'
+```
+
+---
+
+### Lists
+
+#### Get List Members
 `GET /twitter/list/members`
 
-> **Params:** `list_id` (required). Optional: `cursor`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `list_id` | Yes | Twitter list ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/list/members \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/list/members?list_id=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
+**Response:** `{ "members": [User, ...], "has_next_page": true, "next_cursor": "..." }`
+
+#### Get List Followers
+`GET /twitter/list/followers`
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `list_id` | Yes | Twitter list ID |
+| `cursor` | No | Pagination cursor |
+
+```bash
+curl 'https://api.twitterapi.io/twitter/list/followers?list_id=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
+```
 
 ---
 
-## Tweet Actions
+### Spaces
 
-### Create Tweet V2
-Create a tweet. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
+#### Get Space Detail
+`GET /twitter/space/detail`
 
-`POST /twitter/create_tweet_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/create_tweet_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "tweet_text": "<string>",
-  "proxy": "<string>",
-  "reply_to_tweet_id": "<string>",
-  "attachment_url": "<string>",
-  "community_id": "<string>",
-  "is_note_tweet": true,
-  "media_ids": "<array>"
-}
-'
-```
-
-### Delete Tweet V2
-Delete a tweet. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.002 per call.
-
-`POST /twitter/delete_tweet_v2`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `spaceId` | Yes | Twitter Space ID |
 
 ```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/delete_tweet_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "tweet_id": "<string>",
-  "proxy": "<string>"
-}
-'
+curl 'https://api.twitterapi.io/twitter/space/detail?spaceId=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
-
-### Like Tweet V2
-Like a tweet. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.002 per call.
-
-`POST /twitter/like_tweet_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/like_tweet_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "tweet_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Unlike Tweet V2
-Unlike a tweet. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.002 per call.
-
-`POST /twitter/unlike_tweet_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/unlike_tweet_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "tweet_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Retweet Tweet V2
-Retweet a tweet. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.002 per call.
-
-`POST /twitter/retweet_tweet_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/retweet_tweet_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "tweet_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Upload Media V2
-Upload media to twitter. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`POST /twitter/upload_media_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/upload_media_v2 \
-  --header 'Content-Type: multipart/form-data' \
-  --header 'X-API-Key: $KEY' \
-  --form file='@example-file' \
-  --form 'proxy=<string>' \
-  --form 'login_cookies=<string>' \
-  --form is_long_video=true
-```
-
-### Upload Tweet Image
-upload image to twitter. Need to login first. Trial operation price: $0.001 per call.
-
-`POST /twitter/upload_image`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/upload_image \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "auth_session": "<string>",
-  "proxy": "<string>",
-  "image_url": "<string>"
-}
-'
-```
-
 
 ---
 
-## Account Actions
+### Communities (Write actions require login)
 
-### User Login V2
-Log in directly using your email, username, password, and 2FA secret key. And obtain the Login_cookie,  to post tweets, etc. Please note that the Login_cookie obtained through login_v2 can only be used for APIs with the "v2" suffix, such as create_tweet_v2. Trial operation price: $0.003 per call.
+#### Create Community V2
+`POST /twitter/community/create`
 
-`POST /twitter/user_login_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/user_login_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "user_name": "<string>",
-  "email": "<string>",
-  "password": "<string>",
-  "proxy": "<string>",
-  "totp_secret": "<string>"
-}
-'
-```
-
-### Login By Email Or Username
-Login Step 1: by email or username. Recommend to use email. Trial operation price: $0.003 per call. Please read the guide: https://twitterapi. io/blog/twitter-login-and-post-api-guide
-
-`POST /twitter/login_by_email_or_username`
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `proxy` | Yes | Proxy URL |
+| `name` | Yes | Community name |
+| `description` | No | Community description |
 
 ```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/login_by_email_or_username \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "username_or_email": "<string>",
-  "password": "<string>",
-  "proxy": "<string>"
-}
-'
+curl -X POST 'https://api.twitterapi.io/twitter/community/create' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","proxy":"http://user:pass@host:port","name":"My Community"}'
 ```
 
-### Login By 2fa
-Deprecated soon. Please use login V2 instead, as it is more stable. Login Step 2: by 2fa code. Trial operation price: $0.003 per call.
+#### Delete Community V2
+`POST /twitter/community/delete`
 
-`POST /twitter/login_by_2fa`
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `login_cookies` | Yes | From login endpoint |
+| `proxy` | Yes | Proxy URL |
+| `community_id` | Yes | Community ID |
 
 ```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/login_by_2fa \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_data": "<string>",
-  "2fa_code": "<string>",
-  "proxy": "<string>"
-}
-'
+curl -X POST 'https://api.twitterapi.io/twitter/community/delete' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"login_cookies":"COOKIES","proxy":"http://user:pass@host:port","community_id":"1234567890"}'
 ```
 
-### Follow User V2
-Follow a user. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.002 per call.
+#### Join Community V2
+`POST /twitter/community/join`
 
-`POST /twitter/follow_user_v2`
+Same body pattern (login_cookies, proxy, community_id).
 
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/follow_user_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "user_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
+#### Leave Community V2
+`POST /twitter/community/leave`
 
-### Unfollow User V2
-Unfollow a user. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.002 per call.
+Same body pattern (login_cookies, proxy, community_id).
 
-`POST /twitter/unfollow_user_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/unfollow_user_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "user_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-
----
-
-## Profile Management
-
-### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
-Update your Twitter profile information. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`PATCH /twitter/update_profile_v2`
-
-```bash
-curl --request PATCH \
-  --url https://api.twitterapi.io/twitter/update_profile_v2 \
-  --header 'X-API-Key: $KEY'
-```
-
-### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
-Update your Twitter avatar/profile picture. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`PATCH /twitter/update_avatar_v2`
-
-```bash
-curl --request PATCH \
-  --url https://api.twitterapi.io/twitter/update_avatar_v2 \
-  --header 'X-API-Key: $KEY'
-```
-
-### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
-Update your Twitter banner/header image. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`PATCH /twitter/update_banner_v2`
-
-```bash
-curl --request PATCH \
-  --url https://api.twitterapi.io/twitter/update_banner_v2 \
-  --header 'X-API-Key: $KEY'
-```
-
-
----
-
-## DMs
-
-### Send Dm V2
-Send a direct message to a user. You must set the login_cookie.. You can get the login_cookie from /twitter/user_login_v2. You can only send DMs to those who have enabled DMs. Sometimes it may fail, so be prepared to retry. Trial operation price: $0.003 per call.
-
-`POST /twitter/send_dm_to_user`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/send_dm_to_user \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "user_id": "<string>",
-  "text": "<string>",
-  "proxy": "<string>",
-  "media_ids": "<array>",
-  "reply_to_message_id": "<string>"
-}
-'
-```
-
-### Get Dm History By User Id
-Get the direct message history with a user.
-
-`GET /twitter/get_dm_history_by_user_id`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/get_dm_history_by_user_id \
-  --header 'X-API-Key: $KEY'
-```
-
-
----
-
-## Communities
-
-### Create Community V2
-Create a community. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`POST /twitter/create_community_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/create_community_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookies": "<string>",
-  "name": "<string>",
-  "description": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Delete Community V2
-Delete a community. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`POST /twitter/delete_community_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/delete_community_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookie": "<string>",
-  "community_id": "<string>",
-  "community_name": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Join Community V2
-Join a community. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`POST /twitter/join_community_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/join_community_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookie": "<string>",
-  "community_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Leave Community V2
-Leave a community. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
-
-`POST /twitter/leave_community_v2`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/leave_community_v2 \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "login_cookie": "<string>",
-  "community_id": "<string>",
-  "proxy": "<string>"
-}
-'
-```
-
-### Get Community By Id
-Get community info by community id. Price: 20 credits per call. Note: This API is a bit slow, we are still optimizing it.
-
+#### Get Community By ID
 `GET /twitter/community/info`
 
-> **Params:** `community_id` (required)
+| Param | Required | Description |
+|-------|----------|-------------|
+| `community_id` | Yes | Community ID |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/community/info \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/community/info?community_id=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get Community Members
-Get members of a community. Page size is 20.
-
-`GET /twitter/community/members`
-
-> **Params:** `community_id` (required). Optional: `cursor`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/community/members \
-  --header 'X-API-Key: $KEY'
-```
-
-### Get Community Moderators
-Get moderators of a community. Page size is 20.
-
-`GET /twitter/community/moderators`
-
-> **Params:** `community_id` (required). Optional: `cursor`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/community/moderators \
-  --header 'X-API-Key: $KEY'
-```
-
-### Get Community Tweets
-Get tweets of a community. Page size is 20. Order by creation time desc.
-
+#### Get Community Tweets
 `GET /twitter/community/tweets`
 
-> **Params:** `community_id` (required). Optional: `cursor`
+| Param | Required | Description |
+|-------|----------|-------------|
+| `community_id` | Yes | Community ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/community/tweets \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/community/tweets?community_id=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
-### Get All Community Tweets
-get tweets from all communities,each page returns up to 20 tweets. Use cursor for pagination.
+#### Get All Community Tweets
+`GET /twitter/community/tweets/all`
 
-`GET /twitter/community/get_tweets_from_all_community`
+Same params as Get Community Tweets. Returns tweets from all communities.
+
+#### Get Community Members
+`GET /twitter/community/members`
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `community_id` | Yes | Community ID |
+| `cursor` | No | Pagination cursor |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/community/get_tweets_from_all_community \
-  --header 'X-API-Key: $KEY'
+curl 'https://api.twitterapi.io/twitter/community/members?community_id=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
 ```
 
+#### Get Community Moderators
+`GET /twitter/community/moderators`
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `community_id` | Yes | Community ID |
+
+```bash
+curl 'https://api.twitterapi.io/twitter/community/moderators?community_id=1234567890' \
+  -H 'x-api-key: YOUR_KEY'
+```
 
 ---
 
-## Webhooks & Monitoring
+### Webhooks
 
-### Add Webhook Rule
-Add a tweet filter rule. Default rule is not activated. You must call update_rule to activate the rule.
+#### Add Webhook Rule
+`POST /twitter/webhook/rule/add`
 
-`POST /oapi/tweet_filter/add_rule`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/oapi/tweet_filter/add_rule \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "tag": "<string>",
-  "value": "<string>",
-  "interval_seconds": 123
-}
-'
-```
-
-### Update Webhook Rule
-Update a tweet filter rule. You must set all parameters.
-
-`POST /oapi/tweet_filter/update_rule`
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `query` | Yes | Twitter search query to monitor |
+| `webhook_url` | Yes | URL to receive webhook events |
 
 ```bash
-curl --request POST \
-  --url https://api.twitterapi.io/oapi/tweet_filter/update_rule \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "rule_id": "<string>",
-  "tag": "<string>",
-  "value": "<string>",
-  "interval_seconds": 123,
-  "is_effect": 0
-}
-'
+curl -X POST 'https://api.twitterapi.io/twitter/webhook/rule/add' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"query":"from:elonmusk","webhook_url":"https://your-server.com/webhook"}'
 ```
 
-### Delete Webhook Rule
-Delete a tweet filter rule. You must set all parameters.
+#### Update Webhook Rule
+`POST /twitter/webhook/rule/update`
 
-`DELETE /oapi/tweet_filter/delete_rule`
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `rule_id` | Yes | Rule ID to update |
+| `query` | No | New query |
+| `webhook_url` | No | New webhook URL |
 
 ```bash
-curl --request DELETE \
-  --url https://api.twitterapi.io/oapi/tweet_filter/delete_rule \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "rule_id": "<string>"
-}
-'
+curl -X POST 'https://api.twitterapi.io/twitter/webhook/rule/update' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"rule_id":"RULE_ID","query":"from:elonmusk lang:en"}'
 ```
 
-### Get Webhook Rules
-Get all tweet filter rules. Rule can be used in webhook and websocket. You can also modify the rule in our web page.
+#### Delete Webhook Rule
+`POST /twitter/webhook/rule/delete`
 
-`GET /oapi/tweet_filter/get_rules`
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `rule_id` | Yes | Rule ID to delete |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/oapi/tweet_filter/get_rules \
-  --header 'X-API-Key: $KEY'
+curl -X POST 'https://api.twitterapi.io/twitter/webhook/rule/delete' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"rule_id":"RULE_ID"}'
 ```
 
-### Add User To Monitor Tweet
-Add a user to monitor real-time tweets. Monitor tweets from specified accounts, including directly sent tweets, quoted tweets, reply tweets, and retweeted tweets. Please ref:https://twitterapi. io/twitter-stream
+#### Get Webhook Rules
+`GET /twitter/webhook/rules`
 
-`POST /oapi/x_user_stream/add_user_to_monitor_tweet`
+List all your webhook rules.
 
 ```bash
-curl --request POST \
-  --url https://api.twitterapi.io/oapi/x_user_stream/add_user_to_monitor_tweet \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "x_user_name": "<string>"
-}
-'
+curl 'https://api.twitterapi.io/twitter/webhook/rules' \
+  -H 'x-api-key: YOUR_KEY'
 ```
-
-### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
-Get the list of users being monitored for real-time tweets. Returns all users that have been added for tweet monitoring. Please ref:https://twitterapi.io/twitter-stream
-
-`GET /oapi/x_user_stream/get_user_to_monitor_tweet`
-
-```bash
-curl --request GET \
-  --url https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet \
-  --header 'X-API-Key: $KEY'
-```
-
-### Remove User To Monitor Tweet
-Remove a user from monitor real-time tweets. Please ref:https://twitterapi. io/twitter-stream
-
-`POST /oapi/x_user_stream/remove_user_to_monitor_tweet`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/oapi/x_user_stream/remove_user_to_monitor_tweet \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "id_for_user": "<string>"
-}
-'
-```
-
 
 ---
 
-## Spaces
+### Tweet Monitoring
 
-### Get Space Detail
-Get spaces detail by space id
+#### Add User to Monitor
+`POST /twitter/tweet/monitor/add`
 
-`GET /twitter/spaces/detail`
+Monitor a user's tweets in real-time via webhook.
 
-> **Params:** `space_id` (required)
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `user_id` | Yes | Twitter user ID to monitor |
+| `webhook_url` | Yes | URL to receive events |
 
 ```bash
-curl --request GET \
-  --url https://api.twitterapi.io/twitter/spaces/detail \
-  --header 'X-API-Key: $KEY'
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/monitor/add' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"user_id":"44196397","webhook_url":"https://your-server.com/webhook"}'
 ```
 
+#### Remove User from Monitor
+`POST /twitter/tweet/monitor/remove`
+
+| Body Field | Required | Description |
+|------------|----------|-------------|
+| `user_id` | Yes | User ID to stop monitoring |
+
+```bash
+curl -X POST 'https://api.twitterapi.io/twitter/tweet/monitor/remove' \
+  -H 'x-api-key: YOUR_KEY' -H 'Content-Type: application/json' \
+  -d '{"user_id":"44196397"}'
+```
+
+#### Get Monitored Users
+`GET /twitter/tweet/monitor/list`
+
+List all users you're monitoring.
+
+```bash
+curl 'https://api.twitterapi.io/twitter/tweet/monitor/list' \
+  -H 'x-api-key: YOUR_KEY'
+```
 
 ---
 
-## Legacy (use v2 versions instead)
+## Common Workflows
 
-### Create Tweet
-Create a tweet. Need to login first. Trial operation price: $0.001 per call.
-
-`POST /twitter/create_tweet`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/create_tweet \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "auth_session": "<string>",
-  "tweet_text": "<string>",
-  "proxy": "<string>",
-  "quote_tweet_id": "<string>",
-  "in_reply_to_tweet_id": "<string>",
-  "media_id": "<string>"
-}
-'
+### Post a tweet with image
+```
+1. POST /twitter/user_login_v2 → get login_cookies
+2. POST /twitter/tweet/upload_media → get media_id
+3. POST /twitter/tweet → { login_cookies, tweet_text, media_ids: [media_id], proxy }
 ```
 
-### Like Tweet
-Like a tweet. Need to login first. Trial operation price: $0.001 per call.
-
-`POST /twitter/like_tweet`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/like_tweet \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "auth_session": "<string>",
-  "tweet_id": "<string>",
-  "proxy": "<string>"
-}
-'
+### Quote tweet
+```
+1. POST /twitter/tweet → { login_cookies, tweet_text: "My comment", attachment_url: "https://x.com/user/status/TWEET_ID", proxy }
 ```
 
-### Retweet Tweet
-Retweet a tweet. Need to login first. Trial operation price: $0.001 per call.
-
-`POST /twitter/retweet_tweet`
-
-```bash
-curl --request POST \
-  --url https://api.twitterapi.io/twitter/retweet_tweet \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: $KEY' \
-  --data '
-{
-  "auth_session": "<string>",
-  "tweet_id": "<string>",
-  "proxy": "<string>"
-}
-'
+### Reply to a tweet
 ```
+1. POST /twitter/tweet → { login_cookies, tweet_text: "My reply", reply_to_tweet_id: "TWEET_ID", proxy }
+```
+
+### Search and like top tweets
+```
+1. GET /twitter/tweet/advanced_search?query=bitcoin&queryType=Latest → get tweet IDs
+2. POST /twitter/tweet/like → { login_cookies, tweet_id, proxy } (for each tweet)
+```
+
+### Follow users who tweet about a topic
+```
+1. GET /twitter/tweet/advanced_search?query=bitcoin → get author IDs from tweets
+2. GET /twitter/user/info?userName=AUTHOR → get user_id
+3. POST /twitter/user/follow → { login_cookies, user_id, proxy }
+```
+
+### Re-login on auth failure
+```
+If any write endpoint returns { "status": "error" } with auth-related message:
+1. POST /twitter/user_login_v2 → get fresh login_cookies
+2. Retry the failed request with new cookies
+```
+
+---
+
+## Notes
+
+- **Proxy is required** for all write actions. Use residential proxies for best reliability. Always use the same proxy for login and subsequent actions.
+- **2FA is strongly recommended** for login. Without it, cookies may be unreliable.
+- **`is_note_tweet: false`** should always be sent explicitly when posting normal tweets. Omitting it may cause errors.
+- **Response body `null`** on some write endpoints (like retweet) with HTTP 200 = success.
+- **Search operators** only work with `queryType=Latest`. Operators include: `from:`, `to:`, `lang:`, `min_faves:`, `min_retweets:`, `since:`, `until:`, `-filter:replies`, `filter:links`, etc.
+- **Community endpoints** use `login_cookies` (plural), same as all other v2 endpoints.
+- **Rate limits** are global per API key. Spread requests across time to avoid 429 errors.
+- **Minimum charge** of $0.00015 applies even to requests that return no data.
+
+---
+
+*Source: [docs.twitterapi.io](https://docs.twitterapi.io) — Last verified: February 2026*
