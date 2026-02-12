@@ -88,6 +88,8 @@ Advanced search for tweets. Each page returns up to 20 replies(Sometimes less th
 
 `GET /twitter/tweet/advanced_search`
 
+> **Params:** `query` (required, supports Twitter search operators), `queryType` (Top/Latest, default Top). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/tweet/advanced_search \
@@ -98,6 +100,8 @@ curl --request GET \
 get tweet by tweet ids
 
 `GET /twitter/tweets`
+
+> **Params:** `tweet_ids` (required, comma-separated)
 
 ```bash
 curl --request GET \
@@ -110,20 +114,24 @@ get tweet replies by tweet id. Each page returns up to 20 replies(Sometimes less
 
 `GET /twitter/tweet/replies`
 
+> **Params:** `tweet_id` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/tweet/replies \
   --header 'X-API-Key: $KEY'
 ```
 
-### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
+### Get Tweet Replies V2
 Get tweet replies by tweet id (V2). Each page returns up to 20 replies. Use cursor for pagination. Supports sorting by Relevance, Latest, or Likes.
 
 `GET /twitter/tweet/replies/v2`
 
+> **Params:** `tweet_id` (required). Optional: `cursor`, `sort` (Relevance/Latest/Likes)
+
 ```bash
 curl --request GET \
-  --url https://docs.twitterapi.io/api-reference/endpoint/get_tweet_replies_v2 \
+  --url https://api.twitterapi.io/twitter/tweet/replies/v2 \
   --header 'X-API-Key: $KEY'
 ```
 
@@ -131,6 +139,8 @@ curl --request GET \
 get tweet quotes by tweet id. Each page returns exactly 20 quotes. Use cursor for pagination. Order by quote time desc
 
 `GET /twitter/tweet/quotes`
+
+> **Params:** `tweet_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -143,6 +153,8 @@ Get the thread context of a tweet. Suppose a tweet thread consists of t1, t2 (re
 
 `GET /twitter/tweet/thread_context`
 
+> **Params:** `tweet_id` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/tweet/thread_context \
@@ -153,6 +165,8 @@ curl --request GET \
 get tweet retweeters by tweet id. Each page returns about 100 retweeters. Use cursor for pagination. Order by retweet time desc
 
 `GET /twitter/tweet/retweeters`
+
+> **Params:** `tweet_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -165,6 +179,8 @@ get article by tweet id. cost 100 credit per article
 
 `GET /twitter/article`
 
+> **Params:** `tweet_id` (required). Cost: 100 credits
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/article \
@@ -175,6 +191,8 @@ curl --request GET \
 Get trends by woeid
 
 `GET /twitter/trends`
+
+> **Params:** `woeid` (required — 1=worldwide, 23424977=US, 23424969=Turkey)
 
 ```bash
 curl --request GET \
@@ -187,6 +205,8 @@ Retrieve tweets by user name. Sort by created_at. Results are paginated, with ea
 
 `GET /twitter/user/last_tweets`
 
+> **Params:** `userName` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/user/last_tweets \
@@ -197,6 +217,8 @@ curl --request GET \
 get tweet mentions by user screen name. Each page returns exactly 20 mentions. Use cursor for pagination. Order by mention time desc
 
 `GET /twitter/user/mentions`
+
+> **Params:** `userId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -214,6 +236,8 @@ Get user info by screen name
 
 `GET /twitter/user/info`
 
+> **Params:** `userName` (required)
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/user/info \
@@ -224,6 +248,8 @@ curl --request GET \
 Batch get user info by user ids. Pricing:
 
 `GET /twitter/user/batch_info_by_ids`
+
+> **Params:** `userIds` (required, comma-separated)
 
 ```bash
 curl --request GET \
@@ -258,6 +284,8 @@ Search user by keyword
 
 `GET /twitter/user/search`
 
+> **Params:** `query` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/user/search \
@@ -269,6 +297,8 @@ Get user followers in reverse chronological order (newest first). Returns exactl
 
 `GET /twitter/user/followers`
 
+> **Params:** `userName` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/user/followers \
@@ -279,6 +309,8 @@ curl --request GET \
 Get user followings. Each page returns exactly 200 followings. Use cursor for pagination. Sorted by follow date. Most recent followings appear on the first page.
 
 `GET /twitter/user/followings`
+
+> **Params:** `userName` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -302,6 +334,8 @@ Check if the user is following/followed by the target user. Trial operation pric
 
 `GET /twitter/user/check_follow_relationship`
 
+> **Params:** `userName` (required), `targetUserName` (required)
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/user/check_follow_relationship \
@@ -313,6 +347,8 @@ Get followers of a list. Page size is 20.
 
 `GET /twitter/list/followers`
 
+> **Params:** `listId` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/list/followers \
@@ -323,6 +359,8 @@ curl --request GET \
 Get members of a list. Page size is 20.
 
 `GET /twitter/list/members`
+
+> **Params:** `listId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -584,7 +622,7 @@ Update your Twitter profile information. You must set the login_cookie. You can 
 
 ```bash
 curl --request PATCH \
-  --url https://docs.twitterapi.io/api-reference/endpoint/update_profile_v2 \
+  --url https://api.twitterapi.io/twitter/update_profile_v2 \
   --header 'X-API-Key: $KEY'
 ```
 
@@ -595,7 +633,7 @@ Update your Twitter avatar/profile picture. You must set the login_cookie. You c
 
 ```bash
 curl --request PATCH \
-  --url https://docs.twitterapi.io/api-reference/endpoint/update_avatar_v2 \
+  --url https://api.twitterapi.io/twitter/update_avatar_v2 \
   --header 'X-API-Key: $KEY'
 ```
 
@@ -606,7 +644,7 @@ Update your Twitter banner/header image. You must set the login_cookie. You can 
 
 ```bash
 curl --request PATCH \
-  --url https://docs.twitterapi.io/api-reference/endpoint/update_banner_v2 \
+  --url https://api.twitterapi.io/twitter/update_banner_v2 \
   --header 'X-API-Key: $KEY'
 ```
 
@@ -736,6 +774,8 @@ Get community info by community id. Price: 20 credits per call. Note: This API i
 
 `GET /twitter/community/info`
 
+> **Params:** `communityId` (required)
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/community/info \
@@ -746,6 +786,8 @@ curl --request GET \
 Get members of a community. Page size is 20.
 
 `GET /twitter/community/members`
+
+> **Params:** `communityId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -758,6 +800,8 @@ Get moderators of a community. Page size is 20.
 
 `GET /twitter/community/moderators`
 
+> **Params:** `communityId` (required). Optional: `cursor`
+
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/community/moderators \
@@ -768,6 +812,8 @@ curl --request GET \
 Get tweets of a community. Page size is 20. Order by creation time desc.
 
 `GET /twitter/community/tweets`
+
+> **Params:** `communityId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -883,7 +929,7 @@ Get the list of users being monitored for real-time tweets. Returns all users th
 
 ```bash
 curl --request GET \
-  --url https://docs.twitterapi.io/api-reference/endpoint/get_user_to_monitor_tweet \
+  --url https://api.twitterapi.io/twitter/user/monitor_tweet \
   --header 'X-API-Key: $KEY'
 ```
 
@@ -913,6 +959,8 @@ curl --request POST \
 Get spaces detail by space id
 
 `GET /twitter/spaces/detail`
+
+> **Params:** `space_id` (required)
 
 ```bash
 curl --request GET \
