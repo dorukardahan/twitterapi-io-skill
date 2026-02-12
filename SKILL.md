@@ -1,9 +1,9 @@
 ---
 name: twitterapi-io
-version: 2.0.0
+version: 2.1.0
 description: >-
-  Use Twitter/X API via TwitterAPI.io. 55 endpoints — search, post, like,
-  retweet, follow, DM, communities, webhooks. No Twitter dev account needed.
+  Use Twitter/X API via TwitterAPI.io. 59 endpoints — search, post, like,
+  retweet, follow, DM, communities, webhooks, profile management. No Twitter dev account needed.
 homepage: https://twitterapi.io
 ---
 
@@ -113,6 +113,17 @@ get tweet replies by tweet id. Each page returns up to 20 replies(Sometimes less
 ```bash
 curl --request GET \
   --url https://api.twitterapi.io/twitter/tweet/replies \
+  --header 'X-API-Key: $KEY'
+```
+
+### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
+Get tweet replies by tweet id (V2). Each page returns up to 20 replies. Use cursor for pagination. Supports sorting by Relevance, Latest, or Likes.
+
+`GET /twitter/tweet/replies/v2`
+
+```bash
+curl --request GET \
+  --url https://docs.twitterapi.io/api-reference/endpoint/get_tweet_replies_v2 \
   --header 'X-API-Key: $KEY'
 ```
 
@@ -564,6 +575,44 @@ curl --request POST \
 
 ---
 
+## Profile Management
+
+### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
+Update your Twitter profile information. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
+
+`PATCH /twitter/update_profile_v2`
+
+```bash
+curl --request PATCH \
+  --url https://docs.twitterapi.io/api-reference/endpoint/update_profile_v2 \
+  --header 'X-API-Key: $KEY'
+```
+
+### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
+Update your Twitter avatar/profile picture. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
+
+`PATCH /twitter/update_avatar_v2`
+
+```bash
+curl --request PATCH \
+  --url https://docs.twitterapi.io/api-reference/endpoint/update_avatar_v2 \
+  --header 'X-API-Key: $KEY'
+```
+
+### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
+Update your Twitter banner/header image. You must set the login_cookie. You can get the login_cookie from /twitter/user_login_v2. Trial operation price: $0.003 per call.
+
+`PATCH /twitter/update_banner_v2`
+
+```bash
+curl --request PATCH \
+  --url https://docs.twitterapi.io/api-reference/endpoint/update_banner_v2 \
+  --header 'X-API-Key: $KEY'
+```
+
+
+---
+
 ## DMs
 
 ### Send Dm V2
@@ -825,6 +874,17 @@ curl --request POST \
   "x_user_name": "<string>"
 }
 '
+```
+
+### twitterapi.io - Twitter data, 96% cheaper. No auth, no limits, just API.
+Get the list of users being monitored for real-time tweets. Returns all users that have been added for tweet monitoring. Please ref:https://twitterapi.io/twitter-stream
+
+`GET /oapi/x_user_stream/get_user_to_monitor_tweet`
+
+```bash
+curl --request GET \
+  --url https://docs.twitterapi.io/api-reference/endpoint/get_user_to_monitor_tweet \
+  --header 'X-API-Key: $KEY'
 ```
 
 ### Remove User To Monitor Tweet
