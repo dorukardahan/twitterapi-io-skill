@@ -101,7 +101,7 @@ get tweet by tweet ids
 
 `GET /twitter/tweets`
 
-> **Params:** `tweet_ids` (required, comma-separated)
+> **Params:** `tweet_ids` (required, comma-separated tweet IDs)
 
 ```bash
 curl --request GET \
@@ -114,7 +114,7 @@ get tweet replies by tweet id. Each page returns up to 20 replies(Sometimes less
 
 `GET /twitter/tweet/replies`
 
-> **Params:** `tweet_id` (required). Optional: `cursor`
+> **Params:** `tweetId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -127,7 +127,7 @@ Get tweet replies by tweet id (V2). Each page returns up to 20 replies. Use curs
 
 `GET /twitter/tweet/replies/v2`
 
-> **Params:** `tweet_id` (required). Optional: `cursor`, `sort` (Relevance/Latest/Likes)
+> **Params:** `tweetId` (required). Optional: `cursor`, `sort` (Relevance/Latest/Likes)
 
 ```bash
 curl --request GET \
@@ -140,7 +140,7 @@ get tweet quotes by tweet id. Each page returns exactly 20 quotes. Use cursor fo
 
 `GET /twitter/tweet/quotes`
 
-> **Params:** `tweet_id` (required). Optional: `cursor`
+> **Params:** `tweetId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -153,7 +153,7 @@ Get the thread context of a tweet. Suppose a tweet thread consists of t1, t2 (re
 
 `GET /twitter/tweet/thread_context`
 
-> **Params:** `tweet_id` (required). Optional: `cursor`
+> **Params:** `tweetId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -166,7 +166,7 @@ get tweet retweeters by tweet id. Each page returns about 100 retweeters. Use cu
 
 `GET /twitter/tweet/retweeters`
 
-> **Params:** `tweet_id` (required). Optional: `cursor`
+> **Params:** `tweetId` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -347,7 +347,7 @@ Get followers of a list. Page size is 20.
 
 `GET /twitter/list/followers`
 
-> **Params:** `listId` (required). Optional: `cursor`
+> **Params:** `list_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -360,7 +360,7 @@ Get members of a list. Page size is 20.
 
 `GET /twitter/list/members`
 
-> **Params:** `listId` (required). Optional: `cursor`
+> **Params:** `list_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -774,7 +774,7 @@ Get community info by community id. Price: 20 credits per call. Note: This API i
 
 `GET /twitter/community/info`
 
-> **Params:** `communityId` (required)
+> **Params:** `community_id` (required)
 
 ```bash
 curl --request GET \
@@ -787,7 +787,7 @@ Get members of a community. Page size is 20.
 
 `GET /twitter/community/members`
 
-> **Params:** `communityId` (required). Optional: `cursor`
+> **Params:** `community_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -800,7 +800,7 @@ Get moderators of a community. Page size is 20.
 
 `GET /twitter/community/moderators`
 
-> **Params:** `communityId` (required). Optional: `cursor`
+> **Params:** `community_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -813,7 +813,7 @@ Get tweets of a community. Page size is 20. Order by creation time desc.
 
 `GET /twitter/community/tweets`
 
-> **Params:** `communityId` (required). Optional: `cursor`
+> **Params:** `community_id` (required). Optional: `cursor`
 
 ```bash
 curl --request GET \
@@ -929,7 +929,7 @@ Get the list of users being monitored for real-time tweets. Returns all users th
 
 ```bash
 curl --request GET \
-  --url https://api.twitterapi.io/twitter/user/monitor_tweet \
+  --url https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet \
   --header 'X-API-Key: $KEY'
 ```
 
