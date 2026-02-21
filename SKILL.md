@@ -7,7 +7,7 @@ metadata:
   author: dorukardahan
 ---
 
-# TwitterAPI.io Skill v3.1.0
+# TwitterAPI.io skill v3.1.0
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Two API generations: **v1 (deprecated)** and **v2 (current, recommended)**.
@@ -19,7 +19,7 @@ Docs: https://docs.twitterapi.io | Dashboard: https://twitterapi.io/dashboard
 ## Setup
 
 1. Get API key: https://twitterapi.io/dashboard ($0.10 free credits, no CC)
-2. Set env: `export TWITTERAPI_IO_KEY="your_key"`
+2. Store the key in a `.env` file or your shell's secure config (do not use raw `export` with the actual key in the terminal -- it gets saved to shell history).
 3. For write actions, you also need `login_cookies` from v2 login + residential `proxy`.
 
 Base URL: `https://api.twitterapi.io`
@@ -47,7 +47,7 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 
 ---
 
-## QPS (Rate Limits) -- Balance-Based
+## QPS (rate limits) -- balance-based
 
 | Account Balance (Credits) | QPS Limit |
 |---------------------------|-----------|
@@ -59,7 +59,7 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 
 ---
 
-## V1 vs V2 Endpoints
+## V1 vs V2 endpoints
 
 | Feature | V1 (deprecated) | V2 (current) |
 |---------|-----------------|--------------|
@@ -83,9 +83,9 @@ The API has an inconsistency in naming:
 
 ---
 
-## Response Schemas
+## Response schemas
 
-### Tweet Object (from search, replies, etc.)
+### Tweet object (from search, replies, etc.)
 ```json
 {
   "type": "tweet",
@@ -119,7 +119,7 @@ The API has an inconsistency in naming:
 }
 ```
 
-### User Object
+### User object
 ```json
 {
   "type": "user",
@@ -153,7 +153,7 @@ The API has an inconsistency in naming:
 }
 ```
 
-### Paginated List Response
+### Paginated list response
 ```json
 {
   "tweets": [ "...array of Tweet Objects..." ],
@@ -166,7 +166,7 @@ The API has an inconsistency in naming:
 
 ---
 
-## Endpoint Reference
+## Endpoint reference
 
 For detailed endpoint documentation with curl examples, consult the reference files:
 
@@ -178,7 +178,7 @@ For detailed endpoint documentation with curl examples, consult the reference fi
 
 ---
 
-## Twitter Search Syntax (for `query` param in advanced_search)
+## Twitter search syntax (for `query` param in advanced_search)
 
 | Operator | Example | Description |
 |----------|---------|-------------|
@@ -212,7 +212,7 @@ Warning: `has_next_page` may sometimes return `true` even when no more data exis
 
 ---
 
-## Error Handling
+## Error handling
 
 ```json
 { "status": "error", "msg": "Error message" }
@@ -230,7 +230,7 @@ Warning: `has_next_page` may sometimes return `true` even when no more data exis
 
 ---
 
-## Common Workflows
+## Common workflows
 
 ### Get user ID from username (needed for follow, DM, mentions)
 1. `GET /twitter/user/info?userName=TARGET` -> extract `data.id`
@@ -256,7 +256,7 @@ Use Stream endpoints instead of polling `/twitter/user/last_tweets`:
 
 ---
 
-## MCP Server
+## MCP server
 
 ```bash
 claude mcp add twitterapi-io -- npx -y twitterapi-io-mcp
@@ -268,7 +268,7 @@ Also available: `twitterapi-docs` MCP server for querying this documentation pro
 
 ---
 
-## Important Notes
+## Important notes
 
 - **Read endpoints** need only API key. No Twitter account needed.
 - **Write endpoints** need `login_cookies` from v2 login + residential proxy.
