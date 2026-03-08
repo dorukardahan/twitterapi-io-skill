@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 59 endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.2.0
-  updated: 2026-02-13
+  version: 3.3.0
+  updated: 2026-03-08
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.1.0
+# TwitterAPI.io skill v3.3.0
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Two API generations: **v1 (deprecated)** and **v2 (current, recommended)**.
@@ -178,23 +178,67 @@ For detailed endpoint documentation with curl examples, consult the reference fi
 
 ---
 
+## X/Twitter platform degradation notice (March 2026)
+
+**CRITICAL**: Around March 5, 2026, Twitter/X disabled or degraded several advanced search features due to high platform usage. This affects ALL Twitter API providers (not just TwitterAPI.io) because TwitterAPI.io proxies Twitter's own search infrastructure.
+
+### What's broken
+
+| Feature | Status | Impact |
+|---------|--------|--------|
+| `since:DATE` / `until:DATE` in search | **DEGRADED** | Returns incomplete results (often only 7-20 tweets per query regardless of actual volume) |
+| Search pagination | **BROKEN** | Cursor-based pagination returns the SAME page of results repeatedly instead of advancing |
+| `since_time:UNIX` / `until_time:UNIX` | **WORKS** | Alternative date format using Unix timestamps -- returns correct date range |
+| `within_time:Nh` | **WORKS** | Relative time filter (e.g., `within_time:72h`) |
+| `get_user_last_tweets` pagination | **WORKS** | User timeline cursor pagination is unaffected |
+| `get_user_mentions` sinceTime/untilTime | **WORKS** | Server-side Unix timestamp parameters (not search operators) |
+| Webhook filter rules | **WORKS** | Real-time collection unaffected (but webhook URL may be lost during API key rotation) |
+
+### Workarounds for date-range queries
+
+**Instead of** (broken):
+```
+$BTC since:2026-03-06_00:00:00_UTC until:2026-03-07_00:00:00_UTC
+```
+
+**Use** (working):
+```
+$BTC since_time:1741219200 until_time:1741305600
+```
+
+Convert dates to Unix timestamps: `date -d "2026-03-06T00:00:00Z" +%s` or use Python: `int(datetime(2026,3,6,tzinfo=timezone.utc).timestamp())`
+
+**Pagination workaround**: Since pagination is broken, use **hourly time windows** instead of paginating through a large result set. Each 1-hour window returns a unique set of ~7-16 tweets (page 1 only). This gives ~250 unique tweets per coin per day across 24 windows.
+
+**For user timelines**: Use `GET /twitter/user/last_tweets` with cursor pagination (works normally). Paginate backwards through the user's timeline, then client-side filter by `createdAt` date. This completely bypasses search operators.
+
+### Webhook URL gotcha
+
+When a TwitterAPI.io API key is rotated (e.g., after account data reset), the webhook filter rules may be restored but the **webhook URL is NOT automatically restored**. You must manually re-set the webhook URL in the dashboard at https://twitterapi.io/tweet-filter-rules after any key rotation event.
+
+**Monitoring tip**: Check that `collection_type='webhook'` tweets are still arriving. If rules are active but zero webhook tweets arrive for 30+ minutes, verify the webhook URL is configured.
+
+---
+
 ## Twitter search syntax (for `query` param in advanced_search)
 
-| Operator | Example | Description |
-|----------|---------|-------------|
-| `from:` | `from:elonmusk` | Tweets by user |
-| `to:` | `to:elonmusk` | Replies to user |
-| `"..."` | `"exact phrase"` | Exact match |
-| `OR` | `cat OR dog` | Either term |
-| `-` | `-spam` | Exclude term |
-| `since:` / `until:` | `since:2026-01-01_00:00:00_UTC` | Date range (UTC) |
-| `min_faves:` | `min_faves:100` | Min likes |
-| `min_retweets:` | `min_retweets:50` | Min RTs |
-| `filter:media` | `filter:media` | Has media |
-| `filter:links` | `filter:links` | Has links |
-| `lang:` | `lang:en` | Language |
-| `is:reply` | `is:reply` | Only replies |
-| `-is:retweet` | `-is:retweet` | Exclude RTs |
+| Operator | Example | Description | Status (Mar 2026) |
+|----------|---------|-------------|-------------------|
+| `from:` | `from:elonmusk` | Tweets by user | Working |
+| `to:` | `to:elonmusk` | Replies to user | Working |
+| `"..."` | `"exact phrase"` | Exact match | Working |
+| `OR` | `cat OR dog` | Either term | Working |
+| `-` | `-spam` | Exclude term | Working |
+| `since:` / `until:` | `since:2026-01-01_00:00:00_UTC` | Date range (UTC) | **DEGRADED** -- use `since_time:` instead |
+| `since_time:` / `until_time:` | `since_time:1741219200` | Date range (Unix timestamp) | **Working** |
+| `within_time:` | `within_time:24h` | Relative time window | **Working** |
+| `min_faves:` | `min_faves:100` | Min likes | Working |
+| `min_retweets:` | `min_retweets:50` | Min RTs | Working |
+| `filter:media` | `filter:media` | Has media | Working |
+| `filter:links` | `filter:links` | Has links | Working |
+| `lang:` | `lang:en` | Language | Working |
+| `is:reply` | `is:reply` | Only replies | Working |
+| `-is:retweet` | `-is:retweet` | Exclude RTs | Working |
 
 More examples: https://github.com/igorbrigadir/twitter-advanced-search
 
@@ -208,7 +252,10 @@ Most list endpoints return:
 ```
 Pass `cursor=NEXT_CURSOR` to get next page. First page: omit cursor or `cursor=""`.
 
-Warning: `has_next_page` may sometimes return `true` even when no more data exists (Twitter API limitation). If a subsequent request returns empty results, stop paginating.
+**Known issues (March 2026)**:
+- `advanced_search` pagination is **broken** -- returns the same results on every page. Use hourly time windows (1 page per window) instead of deep pagination.
+- `get_user_last_tweets` pagination **works normally** -- cursor advances through the user's timeline chronologically.
+- `has_next_page` may return `true` even when no more data exists (Twitter API limitation). If a subsequent request returns empty or identical results, stop paginating.
 
 ---
 
