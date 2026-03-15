@@ -93,6 +93,13 @@ curl -s "https://api.twitterapi.io/twitter/user/last_tweets?userName=USERNAME" \
 Params: `userName` (required), `cursor` -- 20/page, sorted by created_at desc
 Tip: For frequent polling of single users, use Stream endpoints instead (cheaper).
 
+**Get User TimeLine** `GET /twitter/user/tweet_timeline`
+```bash
+curl -s "https://api.twitterapi.io/twitter/user/tweet_timeline?userId=USERID" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Params: `userId` (required), `cursor` -- 20 tweets/page, sorted by created_at. Same order as Twitter app profile. Time filtering not supported.
+
 **Get User Followers** `GET /twitter/user/followers`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/user/followers?userName=USERNAME" \
@@ -150,6 +157,13 @@ curl -s "https://api.twitterapi.io/twitter/list/members?listId=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `listId` (required), `cursor` -- 20/page. Cost: 150 credits/call.
+
+**Get List Tweet TimeLine** `GET /twitter/list/tweets_timeline`
+```bash
+curl -s "https://api.twitterapi.io/twitter/list/tweets_timeline?listId=LISTID" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Params: `listId` (required), `cursor` -- 20 tweets/page. Cost: 150 credits/call.
 
 ## Community Endpoints (Read)
 
@@ -210,9 +224,3 @@ curl -s "https://api.twitterapi.io/oapi/my/info" \
 ```
 Returns info about the account linked to your API key.
 
-**Get DM History** `GET /twitter/get_dm_history_by_user_id`
-```bash
-curl -s "https://api.twitterapi.io/twitter/get_dm_history_by_user_id?userId=USERID&login_cookies=COOKIE&proxy=PROXY" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY"
-```
-Requires login_cookies + proxy (even though it is GET).

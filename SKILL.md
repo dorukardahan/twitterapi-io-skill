@@ -1,16 +1,16 @@
 ---
 name: twitterapi-io
-description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 59 endpoints. Use when the user wants to read or write Twitter data.
+description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 54 endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.3.0
-  updated: 2026-03-08
+  version: 3.4.0
+  updated: 2026-03-15
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.3.0
+# TwitterAPI.io skill v3.4.0
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
-Two API generations: **v1 (deprecated)** and **v2 (current, recommended)**.
+Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
 
 Docs: https://docs.twitterapi.io | Dashboard: https://twitterapi.io/dashboard
 
@@ -59,19 +59,10 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 
 ---
 
-## V1 vs V2 endpoints
+## API Version Note
 
-| Feature | V1 (deprecated) | V2 (current) |
-|---------|-----------------|--------------|
-| Login | `/twitter/login_by_email_or_username` + `/twitter/login_by_2fa` | `/twitter/user_login_v2` |
-| Tweet | `/twitter/create_tweet` | `/twitter/create_tweet_v2` |
-| Like | `/twitter/like_tweet` | `/twitter/like_tweet_v2` |
-| Retweet | `/twitter/retweet_tweet` | `/twitter/retweet_tweet_v2` |
-| Upload | `/twitter/upload_image` | `/twitter/upload_media_v2` |
-| Auth param | `auth_session` | `login_cookies` |
-| Pricing | $0.001/call | $0.002-0.003/call |
-
-**V1 cookies do NOT work with v2 endpoints and vice versa. Always use v2.**
+All V1 endpoints have been removed from the API. Use only V2 endpoints (`_v2` suffix) for write operations.
+V2 requires `login_cookies` (from `user_login_v2`) + residential `proxy`.
 
 ### login_cookie vs login_cookies -- API Inconsistency
 
@@ -170,11 +161,10 @@ The API has an inconsistency in naming:
 
 For detailed endpoint documentation with curl examples, consult the reference files:
 
-- For READ endpoint documentation (30 endpoints), consult `references/read-endpoints.md`
-- For WRITE V2 endpoint documentation (18 endpoints), consult `references/write-endpoints.md`
+- For READ endpoint documentation (31 endpoints), consult `references/read-endpoints.md`
+- For WRITE V2 endpoint documentation (17 endpoints), consult `references/write-endpoints.md`
 - For Webhook and Stream endpoint documentation (7 endpoints), consult `references/webhook-stream-endpoints.md`
-- For Deprecated V1 endpoint list (6 endpoints), consult `references/deprecated-v1.md`
-- For the complete endpoint index table (all 59 endpoints), consult `references/endpoint-index.md`
+- For the complete endpoint index table (all 54 endpoints), consult `references/endpoint-index.md`
 
 ---
 
@@ -273,7 +263,7 @@ Pass `cursor=NEXT_CURSOR` to get next page. First page: omit cursor or `cursor="
 | Proxy error | Bad proxy format or dead proxy | Format: `http://user:pass@host:port`, use residential |
 | Rate limited | Exceeded QPS for your balance tier | Back off, add balance for higher QPS |
 | Account suspended | Twitter account banned | Use different account |
-| 404 on endpoint | Wrong path or v1 endpoint removed | Check correct path in this doc |
+| 404 on endpoint | Wrong path | Check correct path in this doc |
 
 ---
 
