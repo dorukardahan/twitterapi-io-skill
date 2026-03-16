@@ -10,6 +10,7 @@ All notable changes to this skill will be documented in this file.
 - `get_user_followers`: added missing `pageSize` (integer) parameter
 - `get_user_followings`: added missing `pageSize` (integer) parameter
 - SKILL.md common workflows: removed incorrect "mentions" from user ID lookup requirement (mentions uses userName directly)
+- SKILL.md pricing table: added community info endpoint cost (20 credits)
 
 ## [3.4.0] - 2026-03-15
 

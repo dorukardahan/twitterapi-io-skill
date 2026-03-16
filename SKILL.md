@@ -40,6 +40,7 @@ Auth header: `X-API-Key: $TWITTERAPI_IO_KEY` (all requests)
 | List endpoint calls | 150 | $0.0015 |
 | Check follow relationship | 100 | $0.001 |
 | Get article | 100 | $0.001 |
+| Community info | 20 | $0.0002 |
 | Write actions (tweet, like, RT, follow) | 200-300 | $0.002-0.003 |
 | Login | 300 | $0.003 |
 
