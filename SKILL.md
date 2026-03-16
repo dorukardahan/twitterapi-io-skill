@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 54 endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.4.0
-  updated: 2026-03-15
+  version: 3.4.1
+  updated: 2026-03-16
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.4.0
+# TwitterAPI.io skill v3.4.1
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -269,9 +269,10 @@ Pass `cursor=NEXT_CURSOR` to get next page. First page: omit cursor or `cursor="
 
 ## Common workflows
 
-### Get user ID from username (needed for follow, DM, mentions)
+### Get user ID from username (needed for follow, DM)
 1. `GET /twitter/user/info?userName=TARGET` -> extract `data.id`
-2. Use that numeric ID in follow/DM/mentions calls
+2. Use that numeric ID in follow/DM calls
+Note: `get_user_mentions` accepts `userName` directly -- no ID lookup needed.
 
 ### Post tweet with image
 1. Upload: `POST /twitter/upload_media_v2` -> get `media_id`

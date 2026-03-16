@@ -2,6 +2,15 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.4.1] - 2026-03-16
+
+### Fixed
+- `get_user_mentions`: corrected parameter from `userId` to `userName` (matches live API docs), added `sinceTime`/`untilTime` params, updated curl example
+- `get_user_last_tweets`: added missing `includeReplies` (boolean) and `userId` (alternative) parameters
+- `get_user_followers`: added missing `pageSize` (integer) parameter
+- `get_user_followings`: added missing `pageSize` (integer) parameter
+- SKILL.md common workflows: removed incorrect "mentions" from user ID lookup requirement (mentions uses userName directly)
+
 ## [3.4.0] - 2026-03-15
 
 ### Added

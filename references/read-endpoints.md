@@ -90,7 +90,7 @@ Returns: `{ users[], status, msg }`. Bulk 100+ users: 10 credits each (vs 18 sin
 curl -s "https://api.twitterapi.io/twitter/user/last_tweets?userName=USERNAME" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userName` (required), `cursor` -- 20/page, sorted by created_at desc
+Params: `userName` (required), `userId` (alternative to userName), `cursor`, `includeReplies` (boolean, optional) -- 20/page, sorted by created_at desc
 Tip: For frequent polling of single users, use Stream endpoints instead (cheaper).
 
 **Get User TimeLine** `GET /twitter/user/tweet_timeline`
@@ -105,14 +105,14 @@ Params: `userId` (required), `cursor` -- 20 tweets/page, sorted by created_at. S
 curl -s "https://api.twitterapi.io/twitter/user/followers?userName=USERNAME" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userName` (required), `cursor` -- 200/page, newest first
+Params: `userName` (required), `cursor`, `pageSize` (integer, optional, default 200) -- newest first
 
 **Get User Followings** `GET /twitter/user/followings`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/user/followings?userName=USERNAME" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userName` (required), `cursor` -- 200/page, newest first
+Params: `userName` (required), `cursor`, `pageSize` (integer, optional, default 200) -- newest first
 
 **Get User Verified Followers** `GET /twitter/user/verifiedFollowers`
 ```bash
@@ -123,10 +123,10 @@ Params: `user_id` (required, numeric), `cursor` -- 20/page. Cost: $0.30/1K.
 
 **Get User Mentions** `GET /twitter/user/mentions`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/user/mentions?userId=USERID" \
+curl -s "https://api.twitterapi.io/twitter/user/mentions?userName=USERNAME&sinceTime=1741219200&untilTime=1741305600" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userId` (required, numeric), `cursor` -- 20/page, ordered by mention time desc
+Params: `userName` (required), `sinceTime` (unix seconds, optional), `untilTime` (unix seconds, optional), `cursor` -- 20/page, ordered by mention time desc
 
 **Search Users** `GET /twitter/user/search`
 ```bash
