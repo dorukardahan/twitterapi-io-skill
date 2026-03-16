@@ -98,7 +98,7 @@ Tip: For frequent polling of single users, use Stream endpoints instead (cheaper
 curl -s "https://api.twitterapi.io/twitter/user/tweet_timeline?userId=USERID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userId` (required), `cursor` -- 20 tweets/page, sorted by created_at. Same order as Twitter app profile. Time filtering not supported.
+Params: `userId` (required), `includeReplies` (boolean, optional, default false), `includeParentTweet` (boolean, optional, default false), `cursor` -- 20 tweets/page, sorted by created_at. Same order as Twitter app profile. Time filtering not supported.
 
 **Get User Followers** `GET /twitter/user/followers`
 ```bash

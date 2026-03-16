@@ -2,6 +2,11 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.4.2] - 2026-03-16
+
+### Fixed
+- `get_user_timeline`: added missing `includeReplies` and `includeParentTweet` parameters (from OpenAPI spec)
+
 ## [3.4.1] - 2026-03-16
 
 ### Fixed
