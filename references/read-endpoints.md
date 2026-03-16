@@ -158,12 +158,30 @@ curl -s "https://api.twitterapi.io/twitter/list/members?listId=ID" \
 ```
 Params: `listId` (required), `cursor` -- 20/page. Cost: 150 credits/call.
 
+**Get List Tweets** `GET /twitter/list/tweets`
+```bash
+curl -s "https://api.twitterapi.io/twitter/list/tweets?listId=LISTID" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Params: `listId` (required), `sinceTime` (unix seconds, optional), `untilTime` (unix seconds, optional), `includeReplies` (boolean, optional, default true), `cursor` -- 20 tweets/page, ordered by tweet time desc.
+Note: Unlike `tweets_timeline`, this endpoint supports time-range filtering via `sinceTime`/`untilTime`.
+
 **Get List Tweet TimeLine** `GET /twitter/list/tweets_timeline`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/list/tweets_timeline?listId=LISTID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `listId` (required), `cursor` -- 20 tweets/page. Cost: 150 credits/call.
+
+## DM Endpoints (Read)
+
+**Get DM History by User ID** `GET /twitter/get_dm_history_by_user_id`
+```bash
+curl -s "https://api.twitterapi.io/twitter/get_dm_history_by_user_id?login_cookies=COOKIE&user_id=USERID" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Params: `login_cookies` (required), `user_id` (required), `proxy` (optional but recommended, residential proxy URL)
+Note: Requires `login_cookies` from `user_login_v2` (unlike most read endpoints). Returns DM conversation history with a specific user.
 
 ## Community Endpoints (Read)
 

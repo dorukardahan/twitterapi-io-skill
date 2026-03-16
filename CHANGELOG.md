@@ -2,6 +2,22 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.5.0] - 2026-03-16
+
+### Added
+- `GET /twitter/list/tweets` endpoint — list tweets with sinceTime/untilTime filtering and includeReplies param (different from tweets_timeline)
+- `GET /twitter/get_dm_history_by_user_id` endpoint — DM conversation history (requires login_cookies)
+- `POST /twitter/list/add_member` endpoint — add member to list (uses auth_session/V1 auth, $0.001/call)
+- `POST /twitter/list/remove_member` endpoint — remove member from list (uses auth_session/V1 auth, $0.001/call)
+
+### Changed
+- Total endpoint count: 54 → 58
+- Read endpoints: 31 → 33, Write endpoints: 17 → 19
+
+### Notes
+- 7 new V3 endpoints detected in OpenAPI (user_login_v3, send_tweet_v3, like_tweet_v3, retweet_v3, update_profile_v3, get_my_x_account_detail_v3, delete_my_x_account_v3). V3 uses async username-based auth instead of login_cookies. Not yet added to skill — monitoring for stability.
+- V1 legacy endpoints (create_tweet, like_tweet, retweet_tweet, login_by_email_or_username, login_by_2fa, upload_image) still present in OpenAPI but remain excluded (deprecated in favor of V2).
+
 ## [3.4.2] - 2026-03-16
 
 ### Fixed

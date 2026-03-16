@@ -93,6 +93,38 @@ curl -s -X POST "https://api.twitterapi.io/twitter/unfollow_user_v2" \
   -d '{ "login_cookies": "COOKIE", "user_id": "NUMERIC_USER_ID", "proxy": "PROXY" }'
 ```
 
+## List Actions
+
+**Add Member to List** `POST /twitter/list/add_member`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/list/add_member" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auth_session": "SESSION",
+    "list_id": "LIST_ID",
+    "user_name": "USERNAME",
+    "proxy": "http://user:pass@host:port"
+  }'
+```
+Body: `auth_session` (required, from login_by_2fa), `list_id` (required), `user_id` OR `user_name` (at least one required), `proxy` (required)
+Note: Uses `auth_session` (V1 login flow), not `login_cookies` (V2). Cost: $0.001/call.
+
+**Remove Member from List** `POST /twitter/list/remove_member`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/list/remove_member" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auth_session": "SESSION",
+    "list_id": "LIST_ID",
+    "user_name": "USERNAME",
+    "proxy": "http://user:pass@host:port"
+  }'
+```
+Body: `auth_session` (required), `list_id` (required), `user_id` OR `user_name` (at least one required), `proxy` (required)
+Note: Uses `auth_session` (V1 login flow). Cost: $0.001/call.
+
 ## DM Actions
 
 **Send DM** `POST /twitter/send_dm_to_user` (300 credits)
