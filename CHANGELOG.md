@@ -13,7 +13,7 @@ All notable changes to this skill will be documented in this file.
 - `remove_user_to_monitor_tweet`: corrected body param from `x_user_name` to `id_for_user` (ID from get_user_to_monitor_tweet response)
 - SKILL.md title version now matches frontmatter version
 
-## [3.5.3] - 2026-03-17
+## [3.5.4] - 2026-03-17
 
 ### Fixed (audit-driven, 3 independent auditors: Opus + Codex + Kimi)
 - REVERTED fabricated fix: `delete_community_v2` back to `login_cookies` (plural) — cron had incorrectly changed to `login_cookie` singular

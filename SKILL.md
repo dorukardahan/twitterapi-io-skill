@@ -2,7 +2,7 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 58 endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.5.3
+  version: 3.5.4
   updated: 2026-03-17
   author: dorukardahan
 ---
