@@ -2,6 +2,13 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.5.2] - 2026-03-17
+
+### Fixed
+- `update_avatar_v2` and `update_banner_v2`: corrected from JSON `image_url` to `multipart/form-data` binary `file` upload (matches OpenAPI spec)
+- `update_profile_v2`: added missing `url` parameter, added char limits for all fields
+- `update_profile_v2`: documented known backend bug (`output.buffer.transfer is not a function`) — twitterapi.io server-side issue, no client-side fix
+
 ## [3.5.1] - 2026-03-17
 
 ### Fixed

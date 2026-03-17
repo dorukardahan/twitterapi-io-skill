@@ -151,23 +151,25 @@ Returns: `{ "media_id": "...", "status": "success" }` -- use in `create_tweet_v2
 
 ## Profile Updates (PATCH)
 
-**Update Avatar** `PATCH /twitter/update_avatar_v2` (300 credits)
+**Update Avatar** `PATCH /twitter/update_avatar_v2` (300 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_avatar_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "login_cookies": "COOKIE", "image_url": "https://example.com/avatar.jpg", "proxy": "PROXY" }'
+  -F "file=@/path/to/avatar.jpg" \
+  -F "login_cookies=COOKIE" \
+  -F "proxy=PROXY"
 ```
-Image: JPG/PNG, 400x400px recommended, max 700KB.
+Image: JPG/PNG, 400x400px recommended, max 700KB. Uses binary file upload (not URL).
 
-**Update Banner** `PATCH /twitter/update_banner_v2` (300 credits)
+**Update Banner** `PATCH /twitter/update_banner_v2` (300 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_banner_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "login_cookies": "COOKIE", "image_url": "https://example.com/banner.jpg", "proxy": "PROXY" }'
+  -F "file=@/path/to/banner.jpg" \
+  -F "login_cookies=COOKIE" \
+  -F "proxy=PROXY"
 ```
-Image: JPG/PNG, 1500x500px recommended, max 2MB.
+Image: JPG/PNG, 1500x500px recommended, max 2MB. Uses binary file upload (not URL).
 
 **Update Profile** `PATCH /twitter/update_profile_v2` (300 credits)
 ```bash
@@ -177,11 +179,15 @@ curl -s -X PATCH "https://api.twitterapi.io/twitter/update_profile_v2" \
   -d '{
     "login_cookies": "COOKIE",
     "name": "Display Name",
-    "description": "Bio text",
-    "location": "City",
+    "description": "Bio text (max 160 chars)",
+    "location": "City (max 30 chars)",
+    "url": "https://example.com",
     "proxy": "PROXY"
   }'
 ```
+Optional fields: `name` (max 50 chars), `description` (max 160 chars), `location` (max 30 chars), `url` (website).
+
+> **⚠️ KNOWN BUG (2026-03-17):** `update_profile_v2` returns `"output.buffer.transfer is not a function"` for all requests. This is a **twitterapi.io backend bug** (Node.js `Buffer.transfer()` API issue on their server). Workaround: use V3 `update_profile_v3` (PUT, uses `user_name` auth instead of `login_cookies`) when it becomes stable -- currently also failing. No client-side fix possible.
 
 ## Community Actions (POST, v2)
 
