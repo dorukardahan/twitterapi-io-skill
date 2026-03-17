@@ -2,6 +2,13 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.5.1] - 2026-03-17
+
+### Fixed
+- Community read endpoints: corrected param name from `communityId` to `community_id` (matches OpenAPI spec) in all 5 community GET endpoints
+- `get_tweets_from_all_community`: added missing required params `query` and `queryType` (was documented as cursor-only, but actually requires a search query)
+- Endpoint index: added note about 6 V1 legacy endpoints still in OpenAPI (excluded from skill, deprecated in favor of V2)
+
 ## [3.5.0] - 2026-03-16
 
 ### Added

@@ -187,38 +187,43 @@ Note: Requires `login_cookies` from `user_login_v2` (unlike most read endpoints)
 
 **Get Community Info** `GET /twitter/community/info`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/community/info?communityId=ID" \
+curl -s "https://api.twitterapi.io/twitter/community/info?community_id=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `community_id` (required)
 Cost: 20 credits. Note: This endpoint may be slow (under optimization).
 
 **Get Community Members** `GET /twitter/community/members`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/community/members?communityId=ID" \
+curl -s "https://api.twitterapi.io/twitter/community/members?community_id=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `community_id` (required), `cursor`
 20/page.
 
 **Get Community Moderators** `GET /twitter/community/moderators`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/community/moderators?communityId=ID" \
+curl -s "https://api.twitterapi.io/twitter/community/moderators?community_id=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `community_id` (required), `cursor`
 20/page.
 
 **Get Community Tweets** `GET /twitter/community/tweets`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/community/tweets?communityId=ID" \
+curl -s "https://api.twitterapi.io/twitter/community/tweets?community_id=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `community_id` (required), `cursor`
 20/page, ordered by creation time desc.
 
 **Get All Community Tweets** `GET /twitter/community/get_tweets_from_all_community`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/community/get_tweets_from_all_community?cursor=CURSOR" \
+curl -s "https://api.twitterapi.io/twitter/community/get_tweets_from_all_community?query=QUERY&queryType=Latest" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Tweets from ALL communities, 20/page.
+Params: `query` (required), `queryType` (required, `Latest` | `Top`), `cursor`
+Tweets from ALL communities matching the search query, 20/page.
 
 ## Other Read Endpoints
 

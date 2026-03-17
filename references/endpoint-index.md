@@ -1,4 +1,6 @@
-# Endpoint Index (58 total)
+# Endpoint Index (58 active + 6 V1 legacy = 64 total in OpenAPI)
+
+Note: 6 V1 legacy endpoints exist in OpenAPI but are excluded from this skill (deprecated, use V2 instead): `create_tweet`, `like_tweet`, `retweet_tweet`, `upload_image`, `login_by_email_or_username`, `login_by_2fa`.
 
 ## READ (33 endpoints)
 | # | Method | Path | Category |
