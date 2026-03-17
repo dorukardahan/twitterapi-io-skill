@@ -49,8 +49,9 @@ Guide: https://twitterapi.io/twitter-stream
 curl -s -X POST "https://api.twitterapi.io/oapi/x_user_stream/remove_user_to_monitor_tweet" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "x_user_name": "elonmusk" }'
+  -d '{ "id_for_user": "ID_FROM_GET_MONITORED_USERS" }'
 ```
+Body: `id_for_user` (required — get this ID from `GET /oapi/x_user_stream/get_user_to_monitor_tweet` response, NOT the Twitter username)
 
 **Get Monitored Users** `GET /oapi/x_user_stream/get_user_to_monitor_tweet`
 ```bash

@@ -38,7 +38,7 @@ Returns: `{ replies[], has_next_page, next_cursor }` -- supports sorting
 curl -s "https://api.twitterapi.io/twitter/tweet/quotes?tweetId=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `tweetId` (required), `cursor` -- 20/page
+Params: `tweetId` (required), `sinceTime` (unix seconds, optional), `untilTime` (unix seconds, optional), `includeReplies` (boolean, optional), `cursor` -- 20/page
 
 **Get Tweet Retweeters** `GET /twitter/tweet/retweeters`
 ```bash
@@ -133,6 +133,7 @@ Params: `userName` (required), `sinceTime` (unix seconds, optional), `untilTime`
 curl -s "https://api.twitterapi.io/twitter/user/search?query=KEYWORD" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `query` (required), `cursor` (optional)
 
 **Check Follow Relationship** `GET /twitter/user/check_follow_relationship`
 ```bash

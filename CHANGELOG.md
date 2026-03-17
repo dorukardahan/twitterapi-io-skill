@@ -2,6 +2,17 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.5.3] - 2026-03-17
+
+### Fixed
+- `tweet/quotes`: added missing `sinceTime`, `untilTime`, `includeReplies` params (from OpenAPI spec)
+- `user/search`: added missing `cursor` param
+- `send_dm_to_user`: corrected body param from `receiver_id` to `user_id`, added `media_ids` and `reply_to_message_id` params
+- `create_community_v2`: added missing required `description` param
+- `delete_community_v2`: corrected to use `login_cookie` (singular) per OpenAPI, added missing `community_name` param
+- `remove_user_to_monitor_tweet`: corrected body param from `x_user_name` to `id_for_user` (ID from get_user_to_monitor_tweet response)
+- SKILL.md title version now matches frontmatter version
+
 ## [3.5.2] - 2026-03-17
 
 ### Fixed

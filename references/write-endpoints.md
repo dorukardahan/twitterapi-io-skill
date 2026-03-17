@@ -132,9 +132,10 @@ Note: Uses `auth_session` (V1 login flow). Cost: $0.001/call.
 curl -s -X POST "https://api.twitterapi.io/twitter/send_dm_to_user" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "login_cookies": "COOKIE", "receiver_id": "USER_ID", "text": "Hello!", "proxy": "PROXY" }'
+  -d '{ "login_cookies": "COOKIE", "user_id": "USER_ID", "text": "Hello!", "proxy": "PROXY" }'
 ```
-Note: Can only DM users who have DMs enabled. May fail intermittently -- retry on failure.
+Optional: `media_ids` (array), `reply_to_message_id` (string, for threaded replies)
+Note: Body param is `user_id` (not `receiver_id`). Can only DM users who have DMs enabled. May fail intermittently -- retry on failure.
 
 ## Media
 
@@ -195,10 +196,16 @@ Optional fields: `name` (max 50 chars), `description` (max 160 chars), `location
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/create_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" -H "Content-Type: application/json" \
-  -d '{ "login_cookies": "COOKIE", "name": "My Community", "proxy": "PROXY" }'
+  -d '{ "login_cookies": "COOKIE", "name": "My Community", "description": "Community description", "proxy": "PROXY" }'
 ```
+Body: `login_cookies` (required), `name` (required), `description` (required), `proxy` (required)
 
 **Join Community** `POST /twitter/join_community_v2` (300 credits)
+Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
+
 **Leave Community** `POST /twitter/leave_community_v2` (300 credits)
+Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
+
 **Delete Community** `POST /twitter/delete_community_v2` (300 credits)
-All take: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
+Body: `login_cookie` (required, singular — API inconsistency), `community_id` (required), `community_name` (required), `proxy` (required)
+Note: This endpoint uses `login_cookie` (singular) unlike other v2 endpoints which use `login_cookies` (plural).
