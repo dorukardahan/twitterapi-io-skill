@@ -90,7 +90,7 @@ Returns: `{ users[], status, msg }`. Bulk 100+ users: 10 credits each (vs 18 sin
 curl -s "https://api.twitterapi.io/twitter/user/last_tweets?userName=USERNAME" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userName` (required), `userId` (alternative to userName), `cursor`, `includeReplies` (boolean, optional) -- 20/page, sorted by created_at desc
+Params: `userName` (optional), `userId` (optional, alternative to userName — provide at least one), `cursor`, `includeReplies` (boolean, optional) -- 20/page, sorted by created_at desc
 Tip: For frequent polling of single users, use Stream endpoints instead (cheaper).
 
 **Get User TimeLine** `GET /twitter/user/tweet_timeline`
