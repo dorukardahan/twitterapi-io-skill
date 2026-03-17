@@ -207,5 +207,4 @@ Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
 Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
 
 **Delete Community** `POST /twitter/delete_community_v2` (300 credits)
-Body: `login_cookie` (required, singular — API inconsistency), `community_id` (required), `community_name` (required), `proxy` (required)
-Note: This endpoint uses `login_cookie` (singular) unlike other v2 endpoints which use `login_cookies` (plural).
+Body: `login_cookies` (required), `community_id` (required), `community_name` (required), `proxy` (required)

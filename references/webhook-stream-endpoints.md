@@ -7,7 +7,7 @@ curl -s -X POST "https://api.twitterapi.io/oapi/tweet_filter/add_rule" \
   -H "Content-Type: application/json" \
   -d '{ "tag": "my_rule", "value": "from:elonmusk OR from:sama", "interval_seconds": 300 }'
 ```
-Note: Rules are NOT activated by default. Call `update_rule` with `is_effect: true` to activate.
+Note: Rules are NOT activated by default. Call `update_rule` with `is_effect: 1` to activate (integer, not boolean).
 
 **Get Filter Rules** `GET /oapi/tweet_filter/get_rules`
 ```bash
@@ -19,8 +19,9 @@ curl -s "https://api.twitterapi.io/oapi/tweet_filter/get_rules" -H "X-API-Key: $
 curl -s -X POST "https://api.twitterapi.io/oapi/tweet_filter/update_rule" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "rule_id": "ID", "is_effect": true, "tag": "my_rule", "value": "from:elonmusk", "interval_seconds": 300 }'
+  -d '{ "rule_id": "ID", "is_effect": 1, "tag": "my_rule", "value": "from:elonmusk", "interval_seconds": 300 }'
 ```
+Body: `rule_id` (required), `tag` (required), `value` (required), `interval_seconds` (required), `is_effect` (optional, integer: 0=inactive, 1=active)
 
 **Delete Filter Rule** `DELETE /oapi/tweet_filter/delete_rule`
 ```bash
@@ -29,6 +30,7 @@ curl -s -X DELETE "https://api.twitterapi.io/oapi/tweet_filter/delete_rule" \
   -H "Content-Type: application/json" \
   -d '{ "rule_id": "ID" }'
 ```
+Body: `rule_id` (optional)
 
 ---
 

@@ -7,7 +7,7 @@
 curl -s "https://api.twitterapi.io/twitter/tweet/advanced_search?query=QUERY&queryType=Latest" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `query` (required), `queryType` (`Latest` | `Top`, default: `Latest`), `cursor`
+Params: `query` (required), `queryType` (required, `Latest` | `Top`), `cursor`
 Returns: `{ tweets[], has_next_page, next_cursor }` -- up to 20 tweets/page
 
 **Get Tweets by IDs** `GET /twitter/tweets`
@@ -98,7 +98,7 @@ Tip: For frequent polling of single users, use Stream endpoints instead (cheaper
 curl -s "https://api.twitterapi.io/twitter/user/tweet_timeline?userId=USERID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userId` (required), `includeReplies` (boolean, optional, default false), `includeParentTweet` (boolean, optional, default false), `cursor` -- 20 tweets/page, sorted by created_at. Same order as Twitter app profile. Time filtering not supported.
+Params: `userId` (optional), `includeReplies` (boolean, optional, default false), `includeParentTweet` (boolean, optional, default false), `cursor` -- 20 tweets/page, sorted by created_at. Same order as Twitter app profile. Time filtering not supported.
 
 **Get User Followers** `GET /twitter/user/followers`
 ```bash
@@ -133,13 +133,14 @@ Params: `userName` (required), `sinceTime` (unix seconds, optional), `untilTime`
 curl -s "https://api.twitterapi.io/twitter/user/search?query=KEYWORD" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `query` (required), `cursor` (optional)
+Params: `query` (optional), `cursor` (optional)
 
 **Check Follow Relationship** `GET /twitter/user/check_follow_relationship`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/user/check_follow_relationship?source_user_name=A&target_user_name=B" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `source_user_name` (required), `target_user_name` (optional)
 Returns: `{ data: { following: bool, followed_by: bool }, status, message }`
 Cost: 100 credits/call.
 
@@ -147,17 +148,17 @@ Cost: 100 credits/call.
 
 **Get List Followers** `GET /twitter/list/followers`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/list/followers?listId=ID" \
+curl -s "https://api.twitterapi.io/twitter/list/followers?list_id=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `listId` (required), `cursor` -- 20/page. Cost: 150 credits/call.
+Params: `list_id` (required), `cursor` -- 20/page. Cost: 150 credits/call.
 
 **Get List Members** `GET /twitter/list/members`
 ```bash
-curl -s "https://api.twitterapi.io/twitter/list/members?listId=ID" \
+curl -s "https://api.twitterapi.io/twitter/list/members?list_id=ID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `listId` (required), `cursor` -- 20/page. Cost: 150 credits/call.
+Params: `list_id` (required), `cursor` -- 20/page. Cost: 150 credits/call.
 
 **Get List Tweets** `GET /twitter/list/tweets`
 ```bash
@@ -240,6 +241,7 @@ Params: `woeid` (required, [WOEID list](https://gist.github.com/tedyblood/5bb5a9
 curl -s "https://api.twitterapi.io/twitter/spaces/detail?space_id=SPACEID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
+Params: `space_id` (optional)
 
 **Get My Account Info** `GET /oapi/my/info`
 ```bash

@@ -13,6 +13,19 @@ All notable changes to this skill will be documented in this file.
 - `remove_user_to_monitor_tweet`: corrected body param from `x_user_name` to `id_for_user` (ID from get_user_to_monitor_tweet response)
 - SKILL.md title version now matches frontmatter version
 
+## [3.5.3] - 2026-03-17
+
+### Fixed (audit-driven, 3 independent auditors: Opus + Codex + Kimi)
+- REVERTED fabricated fix: `delete_community_v2` back to `login_cookies` (plural) — cron had incorrectly changed to `login_cookie` singular
+- `list/followers` and `list/members`: param name `listId` → `list_id` (matches OpenAPI spec)
+- `tweet/advanced_search`: `queryType` marked as required (was incorrectly shown as optional)
+- `user/tweet_timeline`: `userId` marked as optional (was incorrectly shown as required)
+- `user/search`: `query` marked as optional (per OpenAPI spec)
+- `check_follow_relationship`: added params line, `target_user_name` marked as optional
+- `spaces/detail`: added params line, `space_id` marked as optional
+- `update_rule`: `is_effect` corrected to optional integer (0/1), was shown as required boolean
+- `delete_rule`: `rule_id` corrected to optional
+
 ## [3.5.2] - 2026-03-17
 
 ### Fixed
