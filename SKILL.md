@@ -7,7 +7,7 @@ metadata:
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.5.3
+# TwitterAPI.io skill v3.5.4
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
