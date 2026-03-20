@@ -1,13 +1,13 @@
 ---
 name: twitterapi-io
-description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 58 endpoints. Use when the user wants to read or write Twitter data.
+description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 65 endpoints (V2 + V3). Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.5.4
-  updated: 2026-03-17
+  version: 3.6.0
+  updated: 2026-03-20
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.5.4
+# TwitterAPI.io skill v3.6.0
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -62,8 +62,9 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 
 ## API Version Note
 
-All V1 endpoints have been removed from the API. Use only V2 endpoints (`_v2` suffix) for write operations.
+All V1 endpoints have been removed from the API. Use V2 (`_v2` suffix) or V3 (`_v3` suffix) endpoints for write operations.
 V2 requires `login_cookies` (from `user_login_v2`) + residential `proxy`.
+V3 requires `user_name`-based auth (from `user_login_v3`) -- async operations, no proxy needed for most actions.
 
 ### login_cookie vs login_cookies -- API Inconsistency
 
@@ -162,10 +163,10 @@ The API has an inconsistency in naming:
 
 For detailed endpoint documentation with curl examples, consult the reference files:
 
-- For READ endpoint documentation (33 endpoints), consult `references/read-endpoints.md`
-- For WRITE V2 endpoint documentation (19 endpoints), consult `references/write-endpoints.md`
+- For READ endpoint documentation (34 endpoints), consult `references/read-endpoints.md`
+- For WRITE V2 + V3 endpoint documentation (25 endpoints), consult `references/write-endpoints.md`
 - For Webhook and Stream endpoint documentation (6 endpoints), consult `references/webhook-stream-endpoints.md`
-- For the complete endpoint index table (all 58 endpoints), consult `references/endpoint-index.md`
+- For the complete endpoint index table (all 65 endpoints), consult `references/endpoint-index.md`
 
 ---
 

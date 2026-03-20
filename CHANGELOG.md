@@ -2,6 +2,21 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.6.0] - 2026-03-20
+
+### Added
+- 7 new V3 endpoints from OpenAPI spec (total: 58 -> 65 active endpoints):
+  - `POST /twitter/user_login_v3` (async login with user_name auth)
+  - `POST /twitter/send_tweet_v3` (async tweet with media support)
+  - `POST /twitter/like_tweet_v3`
+  - `POST /twitter/retweet_v3`
+  - `PUT /twitter/update_profile_v3` (with avatar/banner base64 support)
+  - `DELETE /twitter/delete_my_x_account_v3`
+  - `GET /twitter/get_my_x_account_detail_v3`
+- New "WRITE V3" section in endpoint-index.md
+- Full curl examples and parameter docs for all V3 endpoints in write-endpoints.md
+- V3 account detail read endpoint in read-endpoints.md
+
 ## [3.5.3] - 2026-03-17
 
 ### Fixed
