@@ -1,13 +1,13 @@
 ---
 name: twitterapi-io
-description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 65 endpoints (V2 + V3). Use when the user wants to read or write Twitter data.
+description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 58 endpoints (V2). Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.6.0
-  updated: 2026-03-20
+  version: 3.7.0
+  updated: 2026-03-21
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.6.0
+# TwitterAPI.io skill v3.7.0
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -60,11 +60,10 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 
 ---
 
-## API Version Note
+## API Notes
 
-All V1 endpoints have been removed from the API. Use V2 (`_v2` suffix) or V3 (`_v3` suffix) endpoints for write operations.
-V2 requires `login_cookies` (from `user_login_v2`) + residential `proxy`.
-V3 requires `user_name`-based auth (from `user_login_v3`) -- async operations, no proxy needed for most actions.
+All V1 endpoints have been removed from the API. Use V2 (`_v2` suffix) endpoints for write operations.
+V3 endpoints were taken offline by TwitterAPI.io in March 2026. Use V2 for write operations. For mission-critical tweet posting, consider Twitter's official API.
 
 ### login_cookie vs login_cookies -- API Inconsistency
 
@@ -164,9 +163,9 @@ The API has an inconsistency in naming:
 For detailed endpoint documentation with curl examples, consult the reference files:
 
 - For READ endpoint documentation (34 endpoints), consult `references/read-endpoints.md`
-- For WRITE V2 + V3 endpoint documentation (25 endpoints), consult `references/write-endpoints.md`
+- For WRITE V2 endpoint documentation (19 endpoints), consult `references/write-endpoints.md`
 - For Webhook and Stream endpoint documentation (6 endpoints), consult `references/webhook-stream-endpoints.md`
-- For the complete endpoint index table (all 65 endpoints), consult `references/endpoint-index.md`
+- For the complete endpoint index table (all 58 endpoints), consult `references/endpoint-index.md`
 
 ---
 
@@ -312,7 +311,7 @@ Also available: `twitterapi-docs` MCP server for querying this documentation pro
 
 - **Read endpoints** need only API key. No Twitter account needed.
 - **Write endpoints** need `login_cookies` from v2 login + residential proxy.
-- **V2 cookies only work with v2 endpoints** (`_v2` suffix).
+- **V3 endpoints are offline. Only V2 write endpoints are available.**
 - **2FA strongly recommended** -- use 16-character string `totp_secret` for reliable login.
 - **Proxy mandatory** for all write actions. Use high-quality residential proxies.
 - **Credits never expire** once recharged. Bonus credits valid 30 days.

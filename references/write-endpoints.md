@@ -1,4 +1,4 @@
-# WRITE Endpoints V2 + V3
+# WRITE Endpoints V2
 
 All v2 write endpoints require:
 1. **login_cookies** -- from `POST /twitter/user_login_v2`
@@ -188,7 +188,7 @@ curl -s -X PATCH "https://api.twitterapi.io/twitter/update_profile_v2" \
 ```
 Optional fields: `name` (max 50 chars), `description` (max 160 chars), `location` (max 30 chars), `url` (website).
 
-> **⚠️ KNOWN BUG (2026-03-17):** `update_profile_v2` returns `"output.buffer.transfer is not a function"` for all requests. This is a **twitterapi.io backend bug** (Node.js `Buffer.transfer()` API issue on their server). Workaround: use V3 `update_profile_v3` (PUT, uses `user_name` auth instead of `login_cookies`) when it becomes stable -- currently also failing. No client-side fix possible.
+> **⚠️ KNOWN BUG (2026-03-17):** `update_profile_v2` returns `"output.buffer.transfer is not a function"` for all requests. This is a **twitterapi.io backend bug** (Node.js `Buffer.transfer()` API issue on their server). No client-side fix possible.
 
 ## Community Actions (POST, v2)
 
@@ -208,77 +208,3 @@ Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
 
 **Delete Community** `POST /twitter/delete_community_v2` (300 credits)
 Body: `login_cookies` (required), `community_id` (required), `community_name` (required), `proxy` (required)
-
----
-
-## V3 Endpoints (user_name-based auth, async)
-
-V3 endpoints use `user_name` authentication instead of `login_cookies`. You must first log in via `user_login_v3`, then use your `user_name` in subsequent calls. V3 operations are **asynchronous** -- they queue the action for processing.
-
-**Login V3** `POST /twitter/user_login_v3`
-```bash
-curl -s -X POST "https://api.twitterapi.io/twitter/user_login_v3" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_name": "USERNAME",
-    "email": "EMAIL",
-    "password": "PASSWORD",
-    "totp_code": "2FA_SECRET",
-    "proxy": "http://user:pass@host:port"
-  }'
-```
-Body: `user_name` (required), `email` (optional, required if no cookie), `password` (optional, required if no cookie), `totp_code` (optional, 10-char 2FA secret), `cookie` (optional, resume previous session), `proxy` (required)
-Async login -- check status with `GET /twitter/get_my_x_account_detail_v3?user_name=USERNAME` until status is "Active".
-
-**Send Tweet V3** `POST /twitter/send_tweet_v3`
-```bash
-curl -s -X POST "https://api.twitterapi.io/twitter/send_tweet_v3" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "user_name": "USERNAME", "text": "Hello world!" }'
-```
-Body: `user_name` (required), `text` (required), `media_data_base64` (optional, base64 encoded media), `media_type` (optional, MIME type: image/jpeg, image/png, image/gif, video/mp4), `community_id` (optional)
-Note: No `proxy` needed for V3 tweet actions.
-
-**Like Tweet V3** `POST /twitter/like_tweet_v3`
-```bash
-curl -s -X POST "https://api.twitterapi.io/twitter/like_tweet_v3" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "user_name": "USERNAME", "tweet_id": "TWEET_ID" }'
-```
-Body: `user_name` (required), `tweet_id` (required). Trial: $0.002/call.
-
-**Retweet V3** `POST /twitter/retweet_v3`
-```bash
-curl -s -X POST "https://api.twitterapi.io/twitter/retweet_v3" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "user_name": "USERNAME", "tweet_id": "TWEET_ID" }'
-```
-Body: `user_name` (required), `tweet_id` (required). Trial: $0.002/call.
-
-**Update Profile V3** `PUT /twitter/update_profile_v3`
-```bash
-curl -s -X PUT "https://api.twitterapi.io/twitter/update_profile_v3" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_name": "USERNAME",
-    "name": "Display Name",
-    "bio": "Bio text",
-    "location": "City",
-    "website": "https://example.com"
-  }'
-```
-Body: `user_name` (required), `name` (optional), `bio` (optional), `location` (optional), `website` (optional), `avatar` (optional, base64 or URL), `banner` (optional, base64 or URL). Only non-empty fields are updated.
-
-**Delete My X Account V3** `DELETE /twitter/delete_my_x_account_v3`
-```bash
-curl -s -X DELETE "https://api.twitterapi.io/twitter/delete_my_x_account_v3" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "user_name": "USERNAME" }'
-```
-Body: `user_name` (required). Removes your X account cookie from the system (logged in via `user_login_v3`).

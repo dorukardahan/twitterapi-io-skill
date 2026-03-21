@@ -242,18 +242,3 @@ curl -s "https://api.twitterapi.io/twitter/spaces/detail?space_id=SPACEID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `space_id` (optional)
-
-**Get My X Account Detail V3** `GET /twitter/get_my_x_account_detail_v3`
-```bash
-curl -s "https://api.twitterapi.io/twitter/get_my_x_account_detail_v3?user_name=USERNAME" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY"
-```
-Params: `user_name` (required). Returns details of your X account that was logged in via `user_login_v3`. Check `status` field -- once "Active", the account can post tweets etc.
-
-**Get My Account Info** `GET /oapi/my/info`
-```bash
-curl -s "https://api.twitterapi.io/oapi/my/info" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY"
-```
-Returns info about the account linked to your API key.
-
