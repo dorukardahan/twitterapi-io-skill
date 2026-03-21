@@ -108,7 +108,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/list/add_member" \
   }'
 ```
 Body: `auth_session` (required, from login_by_2fa), `list_id` (required), `user_id` OR `user_name` (at least one required), `proxy` (required)
-Note: Uses `auth_session` (V1 login flow), not `login_cookies` (V2). Cost: $0.001/call.
+Note: Uses `auth_session` (V1 login flow via `login_by_2fa`), not `login_cookies` (V2). No V2 alternative exists for list member management. Cost: $0.001/call.
 
 **Remove Member from List** `POST /twitter/list/remove_member`
 ```bash
@@ -123,7 +123,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/list/remove_member" \
   }'
 ```
 Body: `auth_session` (required), `list_id` (required), `user_id` OR `user_name` (at least one required), `proxy` (required)
-Note: Uses `auth_session` (V1 login flow). Cost: $0.001/call.
+Note: Uses `auth_session` (V1 login flow via `login_by_2fa`), not `login_cookies` (V2). No V2 alternative exists for list member management. Cost: $0.001/call.
 
 ## DM Actions
 
@@ -201,10 +201,22 @@ curl -s -X POST "https://api.twitterapi.io/twitter/create_community_v2" \
 Body: `login_cookies` (required), `name` (required), `description` (required), `proxy` (required)
 
 **Join Community** `POST /twitter/join_community_v2` (300 credits)
-Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/join_community_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "http://user:pass@host:port" }'
+```
+Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
 **Leave Community** `POST /twitter/leave_community_v2` (300 credits)
-Body: `{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "PROXY" }`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/leave_community_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "login_cookies": "COOKIE", "community_id": "ID", "proxy": "http://user:pass@host:port" }'
+```
+Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
 **Delete Community** `POST /twitter/delete_community_v2` (300 credits)
 Body: `login_cookies` (required), `community_id` (required), `community_name` (required), `proxy` (required)

@@ -30,7 +30,7 @@ curl -s -X DELETE "https://api.twitterapi.io/oapi/tweet_filter/delete_rule" \
   -H "Content-Type: application/json" \
   -d '{ "rule_id": "ID" }'
 ```
-Body: `rule_id` (optional)
+Body: `rule_id` (required)
 
 ---
 
@@ -47,6 +47,7 @@ Monitors: direct tweets, quoted tweets, replies, and retweets.
 Guide: https://twitterapi.io/twitter-stream
 
 **Remove User from Monitor** `POST /oapi/x_user_stream/remove_user_to_monitor_tweet`
+> Note: The path says `_to_` but it means "remove FROM monitoring". This is an API naming inconsistency, not a bug.
 ```bash
 curl -s -X POST "https://api.twitterapi.io/oapi/x_user_stream/remove_user_to_monitor_tweet" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \

@@ -184,6 +184,7 @@ curl -s "https://api.twitterapi.io/twitter/get_dm_history_by_user_id?login_cooki
 ```
 Params: `login_cookies` (required), `user_id` (required), `proxy` (optional but recommended, residential proxy URL)
 Note: Requires `login_cookies` from `user_login_v2` (unlike most read endpoints). Returns DM conversation history with a specific user.
+> ⚠️ **Security warning:** `login_cookies` is sent as a GET query parameter, meaning it appears in URL logs, browser history, and server access logs. Use HTTPS and avoid logging request URLs when calling this endpoint.
 
 ## Community Endpoints (Read)
 
@@ -236,9 +237,16 @@ curl -s "https://api.twitterapi.io/twitter/trends?woeid=2418046" \
 ```
 Params: `woeid` (required, [WOEID list](https://gist.github.com/tedyblood/5bb5a9f78314cc1f478b3dd7cde790b9)), `count` (optional, default 30)
 
+**Get My Account Info** `GET /oapi/my/info`
+```bash
+curl -s "https://api.twitterapi.io/oapi/my/info" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Returns your account info (linked to the API key).
+
 **Get Space Detail** `GET /twitter/spaces/detail`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/spaces/detail?space_id=SPACEID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `space_id` (optional)
+Params: `space_id` (required)

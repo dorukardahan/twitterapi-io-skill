@@ -2,6 +2,18 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.7.1] - 2026-03-21
+
+### Fixed
+- SKILL.md: read endpoint count corrected from 34 to 33
+- Added missing curl example for `/oapi/my/info` in read-endpoints.md
+- Added curl examples for `join_community_v2` and `leave_community_v2`
+- `delete_rule`: `rule_id` marked as required (was incorrectly "optional")
+- `spaces/detail`: `space_id` marked as required (was incorrectly "optional")
+- `list/add_member` and `list/remove_member`: added note about V1 `auth_session` auth with no V2 alternative
+- `remove_user_to_monitor_tweet`: added note about confusing `_to_` in path name
+- `get_dm_history_by_user_id`: added credential exposure warning (login_cookies in GET query param)
+
 ## [3.7.0] - 2026-03-21
 
 ### Removed
