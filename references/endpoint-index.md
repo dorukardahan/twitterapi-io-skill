@@ -1,6 +1,6 @@
 # Endpoint Index (58 active endpoints)
 
-Note: OpenAPI spec contains 70 total paths. Excluded from this skill: 6 V1 legacy (deprecated), 7 V3 (offline), 1 non-Twitter (`/plants`). Two endpoints (`tweet_timeline`, `tweets_timeline`) are undocumented in OpenAPI but confirmed working via live testing.
+Note: OpenAPI spec contains 72 total paths. Excluded from this skill: 6 V1 legacy (deprecated), 7 V3 (offline), 1 non-Twitter (`/plants`).
 
 ## READ (33 endpoints)
 | # | Method | Path | Category |

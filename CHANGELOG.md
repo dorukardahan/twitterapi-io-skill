@@ -2,6 +2,12 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [3.7.2] - 2026-03-22
+
+### Fixed
+- Removed outdated "not in the official OpenAPI spec" notes from `tweet_timeline` and `tweets_timeline` — both are now in the live OpenAPI spec
+- Updated endpoint-index.md header note: corrected total OpenAPI path count from 70 to 72
+
 ## [3.7.1] - 2026-03-21
 
 ### Fixed

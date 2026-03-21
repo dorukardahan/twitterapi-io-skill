@@ -94,7 +94,6 @@ Params: `userName` (optional), `userId` (optional, alternative to userName — p
 Tip: For frequent polling of single users, use Stream endpoints instead (cheaper).
 
 **Get User TimeLine** `GET /twitter/user/tweet_timeline`
-> Note: This endpoint is not in the official OpenAPI spec but has been confirmed working via live testing.
 ```bash
 curl -s "https://api.twitterapi.io/twitter/user/tweet_timeline?userId=USERID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
@@ -170,7 +169,6 @@ Params: `listId` (required), `sinceTime` (unix seconds, optional), `untilTime` (
 Note: Unlike `tweets_timeline`, this endpoint supports time-range filtering via `sinceTime`/`untilTime`.
 
 **Get List Tweet TimeLine** `GET /twitter/list/tweets_timeline`
-> Note: This endpoint is not in the official OpenAPI spec but has been confirmed working via live testing.
 ```bash
 curl -s "https://api.twitterapi.io/twitter/list/tweets_timeline?listId=LISTID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
