@@ -94,6 +94,7 @@ Params: `userName` (optional), `userId` (optional, alternative to userName — p
 Tip: For frequent polling of single users, use Stream endpoints instead (cheaper).
 
 **Get User TimeLine** `GET /twitter/user/tweet_timeline`
+> Note: This endpoint is not in the official OpenAPI spec but has been confirmed working via live testing.
 ```bash
 curl -s "https://api.twitterapi.io/twitter/user/tweet_timeline?userId=USERID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
@@ -169,6 +170,7 @@ Params: `listId` (required), `sinceTime` (unix seconds, optional), `untilTime` (
 Note: Unlike `tweets_timeline`, this endpoint supports time-range filtering via `sinceTime`/`untilTime`.
 
 **Get List Tweet TimeLine** `GET /twitter/list/tweets_timeline`
+> Note: This endpoint is not in the official OpenAPI spec but has been confirmed working via live testing.
 ```bash
 curl -s "https://api.twitterapi.io/twitter/list/tweets_timeline?listId=LISTID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
@@ -236,6 +238,13 @@ curl -s "https://api.twitterapi.io/twitter/trends?woeid=2418046" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `woeid` (required, [WOEID list](https://gist.github.com/tedyblood/5bb5a9f78314cc1f478b3dd7cde790b9)), `count` (optional, default 30)
+
+**Get Monitored Users** `GET /oapi/x_user_stream/get_user_to_monitor_tweet`
+```bash
+curl -s "https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Returns the list of users you are monitoring for real-time tweets. See Stream endpoints for add/remove.
 
 **Get My Account Info** `GET /oapi/my/info`
 ```bash

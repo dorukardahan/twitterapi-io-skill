@@ -1,6 +1,6 @@
-# Endpoint Index (58 active + 6 V1 legacy = 64 total in OpenAPI)
+# Endpoint Index (58 active endpoints)
 
-Note: 6 V1 legacy endpoints exist in OpenAPI but are excluded from this skill (deprecated, use V2 instead): `create_tweet`, `like_tweet`, `retweet_tweet`, `upload_image`, `login_by_email_or_username`, `login_by_2fa`.
+Note: OpenAPI spec contains 70 total paths. Excluded from this skill: 6 V1 legacy (deprecated), 7 V3 (offline), 1 non-Twitter (`/plants`). Two endpoints (`tweet_timeline`, `tweets_timeline`) are undocumented in OpenAPI but confirmed working via live testing.
 
 ## READ (33 endpoints)
 | # | Method | Path | Category |

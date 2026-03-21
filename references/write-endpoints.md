@@ -219,4 +219,10 @@ curl -s -X POST "https://api.twitterapi.io/twitter/leave_community_v2" \
 Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
 **Delete Community** `POST /twitter/delete_community_v2` (300 credits)
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/delete_community_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "login_cookies": "COOKIE", "community_id": "ID", "community_name": "NAME", "proxy": "http://user:pass@host:port" }'
+```
 Body: `login_cookies` (required), `community_id` (required), `community_name` (required), `proxy` (required)
