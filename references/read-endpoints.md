@@ -256,4 +256,4 @@ Returns your account info (linked to the API key).
 curl -s "https://api.twitterapi.io/twitter/spaces/detail?space_id=SPACEID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `space_id` (required)
+Params: `space_id` (optional per OpenAPI spec, but practically needed to get a specific space)
