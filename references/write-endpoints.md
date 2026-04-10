@@ -226,3 +226,39 @@ curl -s -X POST "https://api.twitterapi.io/twitter/delete_community_v2" \
   -d '{ "login_cookies": "COOKIE", "community_id": "ID", "community_name": "NAME", "proxy": "http://user:pass@host:port" }'
 ```
 Body: `login_cookies` (required), `community_id` (required), `community_name` (required), `proxy` (required)
+
+
+## Legacy Auth + Write Paths (still active in OpenAPI)
+
+**Login by Email or Username** `POST /twitter/login_by_email_or_username`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/login_by_email_or_username"   -H "X-API-Key: $TWITTERAPI_IO_KEY"   -H "Content-Type: application/json"   -d '{ "username_or_email": "USERNAME_OR_EMAIL", "password": "PASSWORD", "proxy": "PROXY" }'
+```
+Body: `username_or_email` (required), `password` (required), `proxy` (required)
+
+**Login by 2FA** `POST /twitter/login_by_2fa`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/login_by_2fa"   -H "X-API-Key: $TWITTERAPI_IO_KEY"   -H "Content-Type: application/json"   -d '{ "login_data": "LOGIN_DATA", "2fa_code": "123456", "proxy": "PROXY" }'
+```
+Body: `login_data` (required), `2fa_code` (required), `proxy` (required)
+
+**Create Tweet (legacy)** `POST /twitter/create_tweet`
+Body: `auth_session` (required), `tweet_text` (required), `proxy` (required). Optional: `quote_tweet_id`, `in_reply_to_tweet_id`, `media_id`.
+
+**Like Tweet (legacy)** `POST /twitter/like_tweet`
+Body: `auth_session` (required), `tweet_id` (required), `proxy` (required)
+
+**Retweet (legacy)** `POST /twitter/retweet_tweet`
+Body: `auth_session` (required), `tweet_id` (required), `proxy` (required)
+
+**Upload Image (legacy)** `POST /twitter/upload_image`
+Body in OpenAPI currently marks `auth_session`, `list_id`, `proxy` as required and also exposes optional `image_url`. This appears inconsistent, so use the spec literally.
+
+**Get Bookmarks** `POST /twitter/bookmarks_v2`
+Body: `login_cookies` (required), `proxy` (required), optional `count`, `cursor`
+
+**Bookmark Tweet** `POST /twitter/bookmark_tweet_v2`
+Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
+
+**Unbookmark Tweet** `POST /twitter/unbookmark_tweet_v2`
+Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
