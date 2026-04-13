@@ -42,13 +42,13 @@ Then: "Read SKILL.md and search recent tweets about Bitcoin"
 
 Paste the contents of `SKILL.md` into your conversation or system prompt. The LLM will understand how to construct curl commands for any Twitter operation.
 
-## Endpoints (58 total)
+## Endpoints (67 total)
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| **Read** | 33 | Search, tweets, users, lists, communities, trends, spaces, account info |
-| **Write V2** | 19 | Login, tweet, like, retweet, follow, profile updates, DM, media, communities |
-| **Webhook + Stream** | 6 | Add/update/delete rules, monitor users |
+| **Read** | 31 | Search, tweets, users, lists, communities, trends, spaces, account info |
+| **Write** | 28 | Login, tweet, like, retweet, follow, profile updates, DM, media, communities |
+| **Webhook + Stream** | 8 | Add/update/delete rules, monitor users |
 
 ## Requirements
 

@@ -2,7 +2,7 @@
 
 Note: OpenAPI spec contains 75 total paths. Excluded from this skill: 7 V3 (offline), 1 non-Twitter (`/plants`).
 
-## READ (32 endpoints)
+## READ (31 endpoints)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 1 | GET | `/oapi/my/info` | other |
@@ -70,7 +70,7 @@ Note: OpenAPI spec contains 75 total paths. Excluded from this skill: 7 V3 (offl
 | 59 | POST | `/twitter/upload_media_v2` | action |
 | 60 | POST | `/twitter/user_login_v2` | action |
 
-## WEBHOOK + STREAM (7 endpoints)
+## WEBHOOK + STREAM (8 endpoints)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 61 | POST | `/oapi/tweet_filter/add_rule` | webhook |

@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.1
+
+- fix: sync endpoint category counts to 67 active endpoints (31 read, 28 write, 8 webhook/stream)
+- docs: add missing curl examples for legacy and bookmark endpoints
+
 All notable changes to this skill will be documented in this file.
 
 ## [3.8.0] - 2026-04-10

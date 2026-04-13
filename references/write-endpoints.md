@@ -243,22 +243,64 @@ curl -s -X POST "https://api.twitterapi.io/twitter/login_by_2fa"   -H "X-API-Key
 Body: `login_data` (required), `2fa_code` (required), `proxy` (required)
 
 **Create Tweet (legacy)** `POST /twitter/create_tweet`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/create_tweet" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "auth_session": "SESSION", "tweet_text": "Hello", "proxy": "PROXY" }'
+```
 Body: `auth_session` (required), `tweet_text` (required), `proxy` (required). Optional: `quote_tweet_id`, `in_reply_to_tweet_id`, `media_id`.
 
 **Like Tweet (legacy)** `POST /twitter/like_tweet`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/like_tweet" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "auth_session": "SESSION", "tweet_id": "ID", "proxy": "PROXY" }'
+```
 Body: `auth_session` (required), `tweet_id` (required), `proxy` (required)
 
 **Retweet (legacy)** `POST /twitter/retweet_tweet`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/retweet_tweet" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "auth_session": "SESSION", "tweet_id": "ID", "proxy": "PROXY" }'
+```
 Body: `auth_session` (required), `tweet_id` (required), `proxy` (required)
 
 **Upload Image (legacy)** `POST /twitter/upload_image`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/upload_image" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "auth_session": "SESSION", "list_id": "LIST_ID", "proxy": "PROXY", "image_url": "https://example.com/image.jpg" }'
+```
 Body in OpenAPI currently marks `auth_session`, `list_id`, `proxy` as required and also exposes optional `image_url`. This appears inconsistent, so use the spec literally.
 
 **Get Bookmarks** `POST /twitter/bookmarks_v2`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/bookmarks_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "login_cookies": "COOKIE", "proxy": "PROXY", "count": 20 }'
+```
 Body: `login_cookies` (required), `proxy` (required), optional `count`, `cursor`
 
 **Bookmark Tweet** `POST /twitter/bookmark_tweet_v2`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/bookmark_tweet_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "login_cookies": "COOKIE", "tweet_id": "ID", "proxy": "PROXY" }'
+```
 Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
 
 **Unbookmark Tweet** `POST /twitter/unbookmark_tweet_v2`
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/unbookmark_tweet_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "login_cookies": "COOKIE", "tweet_id": "ID", "proxy": "PROXY" }'
+```
 Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
