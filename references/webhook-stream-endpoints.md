@@ -1,5 +1,12 @@
 # Webhook / Filter Rule Endpoints
 
+**Get My Account Info** `GET /oapi/my/info`
+```bash
+curl -s "https://api.twitterapi.io/oapi/my/info" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Returns your account info (linked to the API key).
+
 **Add Filter Rule** `POST /oapi/tweet_filter/add_rule`
 ```bash
 curl -s -X POST "https://api.twitterapi.io/oapi/tweet_filter/add_rule" \

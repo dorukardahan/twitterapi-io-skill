@@ -244,13 +244,6 @@ curl -s "https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet"
 ```
 Returns the list of users you are monitoring for real-time tweets. See Stream endpoints for add/remove.
 
-**Get My Account Info** `GET /oapi/my/info`
-```bash
-curl -s "https://api.twitterapi.io/oapi/my/info" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY"
-```
-Returns your account info (linked to the API key).
-
 **Get Space Detail** `GET /twitter/spaces/detail`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/spaces/detail?space_id=SPACEID" \
