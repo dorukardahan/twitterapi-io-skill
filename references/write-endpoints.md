@@ -1,4 +1,6 @@
-# WRITE Endpoints V2
+# WRITE Endpoints
+
+Most write endpoints use V2, but this file also includes the still-active legacy write/auth paths that remain in the live OpenAPI spec.
 
 All v2 write endpoints require:
 1. **login_cookies** -- from `POST /twitter/user_login_v2`

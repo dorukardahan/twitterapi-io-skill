@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.3
+
+- fix: rename write reference header to cover active legacy write/auth endpoints still present in live OpenAPI
+
 ## 3.8.2
 
 - fix: move /oapi/my/info from read to webhook/stream category in endpoint-index and references
