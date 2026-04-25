@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.8.4
+
+- fix: sync create_tweet_v2 optional fields (`quote_tweet_id`, `schedule_for`) with live OpenAPI
+- fix: correct send_dm_to_user attachment field to singular `media_id`
+- fix: mark legacy upload_image `image_url` as required per live OpenAPI
+
 ## 3.8.3
 
 - fix: rename write reference header to cover active legacy write/auth endpoints still present in live OpenAPI

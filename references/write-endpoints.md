@@ -41,7 +41,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/create_tweet_v2" \
     "proxy": "http://user:pass@host:port"
   }'
 ```
-Optional: `reply_to_tweet_id`, `attachment_url` (quote tweet URL), `community_id`, `is_note_tweet` (Premium only, >280 chars), `media_ids` (array)
+Optional: `reply_to_tweet_id`, `attachment_url` (quote tweet URL), `community_id`, `is_note_tweet` (Premium only, >280 chars), `media_ids` (array), `quote_tweet_id` (tweet ID alternative to `attachment_url`), `schedule_for` (ISO-8601 timestamp for scheduled posting)
 Response: `{ "tweet_id": "1234...", "status": "success", "msg": "..." }`
 
 **Delete Tweet** `POST /twitter/delete_tweet_v2` (200 credits)
@@ -136,7 +136,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/send_dm_to_user" \
   -H "Content-Type: application/json" \
   -d '{ "login_cookies": "COOKIE", "user_id": "USER_ID", "text": "Hello!", "proxy": "PROXY" }'
 ```
-Optional: `media_ids` (array), `reply_to_message_id` (string, for threaded replies)
+Optional: `media_id` (string), `reply_to_message_id` (string, for threaded replies)
 Note: Body param is `user_id` (not `receiver_id`). Can only DM users who have DMs enabled. May fail intermittently -- retry on failure.
 
 ## Media
@@ -276,9 +276,9 @@ Body: `auth_session` (required), `tweet_id` (required), `proxy` (required)
 curl -s -X POST "https://api.twitterapi.io/twitter/upload_image" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "auth_session": "SESSION", "list_id": "LIST_ID", "proxy": "PROXY", "image_url": "https://example.com/image.jpg" }'
+  -d '{ "auth_session": "SESSION", "image_url": "https://example.com/image.jpg", "proxy": "PROXY" }'
 ```
-Body in OpenAPI currently marks `auth_session`, `list_id`, `proxy` as required and also exposes optional `image_url`. This appears inconsistent, so use the spec literally.
+Body: `auth_session` (required), `image_url` (required), `proxy` (required)
 
 **Get Bookmarks** `POST /twitter/bookmarks_v2`
 ```bash
