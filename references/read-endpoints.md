@@ -237,13 +237,6 @@ curl -s "https://api.twitterapi.io/twitter/trends?woeid=2418046" \
 ```
 Params: `woeid` (required, [WOEID list](https://gist.github.com/tedyblood/5bb5a9f78314cc1f478b3dd7cde790b9)), `count` (optional, default 30)
 
-**Get Monitored Users** `GET /oapi/x_user_stream/get_user_to_monitor_tweet`
-```bash
-curl -s "https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY"
-```
-Returns the list of users you are monitoring for real-time tweets. See Stream endpoints for add/remove.
-
 **Get Space Detail** `GET /twitter/spaces/detail`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/spaces/detail?space_id=SPACEID" \
