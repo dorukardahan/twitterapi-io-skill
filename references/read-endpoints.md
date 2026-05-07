@@ -1,4 +1,4 @@
-# READ Endpoints (GET, API key only)
+# READ Endpoints (32 GET endpoints, mostly API key only)
 
 ## Tweet Endpoints
 
@@ -120,6 +120,15 @@ curl -s "https://api.twitterapi.io/twitter/user/verifiedFollowers?user_id=USERID
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `user_id` (required, numeric), `cursor` -- 20/page. Cost: $0.30/1K.
+
+
+**Get User Follower IDs** `GET /twitter/user/followers_ids`
+```bash
+curl -s "https://api.twitterapi.io/twitter/user/followers_ids?userName=USERNAME&count=5000" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Params: `userName` (optional), `userId` (optional, alternative to userName — provide at least one), `count` (integer, optional, min 50, max 5000, default 5000), `cursor`
+Returns follower IDs only (no profile metadata) for large-scale graph collection. Up to 5,000 IDs per call.
 
 **Get User Mentions** `GET /twitter/user/mentions`
 ```bash

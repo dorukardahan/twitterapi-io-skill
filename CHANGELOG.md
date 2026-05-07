@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.6
+
+- fix: add live OpenAPI read endpoint `GET /twitter/user/followers_ids` and update counts to 68 total (32 read / 28 write / 8 webhook-stream)
+
 ## 3.8.5
 
 - fix: remove duplicated `/oapi/x_user_stream/get_user_to_monitor_tweet` entry from read references so category coverage stays at 31 read / 28 write / 8 webhook-stream

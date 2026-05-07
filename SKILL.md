@@ -1,13 +1,13 @@
 ---
 name: twitterapi-io
-description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 67 active endpoints. Use when the user wants to read or write Twitter data.
+description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.5
+  version: 3.8.6
   updated: 2026-04-29
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.5
+# TwitterAPI.io skill v3.8.6
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -162,10 +162,10 @@ The API has an inconsistency in naming:
 
 For detailed endpoint documentation with curl examples, consult the reference files:
 
-- For READ endpoint documentation (31 endpoints), consult `references/read-endpoints.md`
+- For READ endpoint documentation (32 endpoints), consult `references/read-endpoints.md`
 - For WRITE endpoint documentation (28 endpoints), consult `references/write-endpoints.md`
 - For Webhook and Stream endpoint documentation (8 endpoints), consult `references/webhook-stream-endpoints.md`
-- For the complete endpoint index table (all 67 endpoints), consult `references/endpoint-index.md`
+- For the complete endpoint index table (all 68 endpoints), consult `references/endpoint-index.md`
 
 ---
 

@@ -1,6 +1,6 @@
 # twitterapi-io-skill
 
-**Make any LLM use Twitter/X.** 67 active endpoints via [TwitterAPI.io](https://twitterapi.io) — search, post, like, retweet, follow, DM, communities, webhooks, profile management.
+**Make any LLM use Twitter/X.** 68 active endpoints via [TwitterAPI.io](https://twitterapi.io) — search, post, like, retweet, follow, DM, communities, webhooks, profile management.
 
 No Twitter developer account needed. Works with any AI assistant.
 
@@ -42,11 +42,11 @@ Then: "Read SKILL.md and search recent tweets about Bitcoin"
 
 Paste the contents of `SKILL.md` into your conversation or system prompt. The LLM will understand how to construct curl commands for any Twitter operation.
 
-## Endpoints (67 total)
+## Endpoints (68 total)
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| **Read** | 31 | Search, tweets, users, lists, communities, trends, spaces, account info |
+| **Read** | 32 | Search, tweets, users, lists, communities, trends, spaces, account info |
 | **Write** | 28 | Login, tweet, like, retweet, follow, profile updates, DM, media, communities |
 | **Webhook + Stream** | 8 | Add/update/delete rules, monitor users |
 
