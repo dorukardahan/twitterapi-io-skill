@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.7
+
+- fix: correct method-based endpoint counts in SKILL.md, README.md, and endpoint-index.md (35 GET / 33 write / 8 webhook-stream, with `/oapi/` overlap explained)
+
 ## 3.8.6
 
 - fix: add live OpenAPI read endpoint `GET /twitter/user/followers_ids` and update counts to 68 total (32 read / 28 write / 8 webhook-stream)

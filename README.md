@@ -44,10 +44,12 @@ Paste the contents of `SKILL.md` into your conversation or system prompt. The LL
 
 ## Endpoints (68 total)
 
+Counting by HTTP method from the live OpenAPI: **35 GET**, **33 POST/PATCH/PUT/DELETE**, with **8 `/oapi/` webhook/stream endpoints** overlapping those method totals (3 GET + 5 write).
+
 | Category | Count | Examples |
 |----------|-------|---------|
-| **Read** | 32 | Search, tweets, users, lists, communities, trends, spaces, account info |
-| **Write** | 28 | Login, tweet, like, retweet, follow, profile updates, DM, media, communities |
+| **Read** | 35 | Search, tweets, users, lists, communities, trends, spaces, account info, `/oapi/my/info`, get rules, monitored users |
+| **Write** | 33 | Login, tweet, like, retweet, follow, profile updates, DM, media, communities, webhook rule changes, monitor user changes |
 | **Webhook + Stream** | 8 | Add/update/delete rules, monitor users |
 
 ## Requirements

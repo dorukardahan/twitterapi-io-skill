@@ -1,8 +1,9 @@
 # Endpoint Index (68 active endpoints)
 
 Note: OpenAPI spec contains 76 total paths. Excluded from this skill: 7 V3 (offline), 1 non-Twitter (`/plants`).
+Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 33 POST/PATCH/PUT/DELETE endpoints, plus 8 `/oapi/` webhook/stream endpoints (3 GET + 5 write). The READ and WRITE tables below keep `/oapi/` grouped under WEBHOOK + STREAM, so they list the 32 non-webhook GET endpoints and 28 non-webhook write endpoints separately.
 
-## READ (32 endpoints)
+## READ (35 GET endpoints total; 32 non-webhook rows below)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 1 | GET | `/twitter/article` | tweet |
@@ -38,7 +39,7 @@ Note: OpenAPI spec contains 76 total paths. Excluded from this skill: 7 V3 (offl
 | 31 | GET | `/twitter/user/followers_ids` | user |
 | 32 | GET | `/twitter/user_about` | other |
 
-## WRITE (28 endpoints)
+## WRITE (33 write endpoints total; 28 non-webhook rows below)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 33 | POST | `/twitter/bookmark_tweet_v2` | action |
@@ -70,7 +71,7 @@ Note: OpenAPI spec contains 76 total paths. Excluded from this skill: 7 V3 (offl
 | 59 | POST | `/twitter/upload_media_v2` | action |
 | 60 | POST | `/twitter/user_login_v2` | action |
 
-## WEBHOOK + STREAM (8 endpoints)
+## WEBHOOK + STREAM (8 endpoints: 3 GET + 5 write)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 61 | GET | `/oapi/my/info` | other |
