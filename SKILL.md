@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.7
+  version: 3.8.8
   updated: 2026-05-10
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.7
+# TwitterAPI.io skill v3.8.8
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -109,6 +109,30 @@ The API has an inconsistency in naming:
   "quoted_tweet": null,
   "retweeted_tweet": null
 }
+```
+
+#### Gotcha: `displayTextRange` on long tweets (X Premium / "note tweets")
+
+`displayTextRange` is the start and end index (in Unicode code points) of the **abbreviated 280-character preview** of a tweet — designed to trim trailing media URLs and quote-context URLs that the X UI hides on short tweets.
+
+For X Premium long tweets (body > 280 chars), the API delivers the FULL body in the `text` field directly — there is no separate `note_tweet` field in this response schema. **However, `displayTextRange[1]` still points to the abbreviated preview length** (e.g., `[0, 213]` on a 623-char body), pointing at the cut-off point of the short preview, not the end of the full tweet.
+
+Naively applying `text[:displayTextRange[1]]` will **chop a long tweet at ~280 chars** and silently lose the rest of the body.
+
+**Rule:** only apply `displayTextRange` trimming when `len(text) <= 320` (allowing some slack for trailing URLs). For longer tweets, use the `text` field as-is — it already contains the full author-visible body.
+
+```python
+# WRONG — truncates X Premium long tweets at ~280 chars
+text = tweet["text"]
+dtr = tweet.get("displayTextRange")
+if dtr:
+    text = text[:dtr[1]]
+
+# RIGHT — only trim on short tweets where displayTextRange is meaningful
+text = tweet["text"]
+dtr = tweet.get("displayTextRange")
+if dtr and len(text) <= 320:
+    text = text[:dtr[1]]
 ```
 
 ### User object
