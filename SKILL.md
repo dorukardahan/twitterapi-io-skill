@@ -119,7 +119,7 @@ For X Premium long tweets (body > 280 chars), the API delivers the FULL body in 
 
 Naively applying `text[:displayTextRange[1]]` will **chop a long tweet at ~280 chars** and silently lose the rest of the body.
 
-**Rule:** only apply `displayTextRange` trimming when `len(text) <= 320` (allowing some slack for trailing URLs). For longer tweets, use the `text` field as-is — it already contains the full author-visible body.
+**Rule:** only apply `displayTextRange` trimming when `len(text) <= 280` — i.e., the body fits in a classic short tweet. For longer tweets, use the `text` field as-is; it already contains the full author-visible body, and `displayTextRange` points only at the preview boundary.
 
 ```python
 # WRONG — truncates X Premium long tweets at ~280 chars
@@ -131,9 +131,11 @@ if dtr:
 # RIGHT — only trim on short tweets where displayTextRange is meaningful
 text = tweet["text"]
 dtr = tweet.get("displayTextRange")
-if dtr and len(text) <= 320:
+if dtr and len(text) <= 280:
     text = text[:dtr[1]]
 ```
+
+**Edge case (281–320 chars):** the body could be either a short tweet with trailing media URLs (where trimming would be correct) OR a short long-tweet body (where trimming chops the body). `displayTextRange` alone cannot distinguish the two. If you need to handle this range precisely, inspect `entities.urls` and `extendedEntities.media`: when the hidden tail (`text[displayTextRange[1]:]`) consists only of URLs already listed in those fields, trimming is safe; otherwise treat it as long-tweet body and keep `text` whole.
 
 ### User object
 ```json

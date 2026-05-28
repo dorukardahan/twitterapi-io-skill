@@ -2,7 +2,7 @@
 
 ## 3.8.8
 
-- docs: document `displayTextRange` long-tweet pitfall in the Tweet object schema. On X Premium long tweets (text > 280 chars), the API delivers the full body in `text` but `displayTextRange[1]` still points to the abbreviated 280-char preview length — a naive `text[:displayTextRange[1]]` will chop the body. Added a Gotcha block with the safe rule (`len(text) <= 320`) and right/wrong Python snippet so downstream readers do not lose the body.
+- docs: document `displayTextRange` long-tweet pitfall in the Tweet object schema. On X Premium long tweets (text > 280 chars), the API delivers the full body in `text` but `displayTextRange[1]` still points to the abbreviated 280-char preview length — a naive `text[:displayTextRange[1]]` will chop the body. Added a Gotcha block with the safe rule (`len(text) <= 280`) and right/wrong Python snippet, plus an Edge Case note covering 281–320-char bodies where `displayTextRange` alone cannot distinguish short-tweet trailing URLs from short long-tweet bodies (resolve via `entities.urls` / `extendedEntities.media`). Codex P2 fix.
 
 ## 3.8.7
 
