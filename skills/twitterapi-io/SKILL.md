@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io public read endpoints — search tweets, get user info, timelines, mentions, replies, quotes, trends, pagination, deduplication, and analysis. This Hermes bundle is read-only by default and intentionally excludes write/login/cookie/proxy endpoint references.
 metadata:
-  version: 3.8.11
+  version: 3.8.12
   updated: "2026-06-09"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.11 — Hermes read-only bundle
+# TwitterAPI.io skill v3.8.12 — Hermes read-only bundle
 
 Access public Twitter/X data via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use this Hermes bundle for read-only search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
@@ -46,8 +46,7 @@ Auth header: `X-API-Key: $TWITTERAPI_IO_KEY` (all requests)
 | Check follow relationship | 100 | $0.001 |
 | Get article | 100 | $0.001 |
 | Community info | 20 | $0.0002 |
-| Write actions (tweet, like, RT, follow) | 200-300 | $0.002-0.003 |
-| Login | 300 | $0.003 |
+
 
 Note: If the API returns 0 or 1 item, you are still charged the minimum (15 credits).
 
@@ -67,16 +66,7 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 
 ## API Notes
 
-OpenAPI now also exposes several legacy auth/write paths alongside V2 endpoints. Prefer V2 where available.
-V3 endpoints were taken offline by TwitterAPI.io in March 2026. Use V2 for write operations. For mission-critical tweet posting, consider Twitter's official API.
-
-### login_cookie vs login_cookies -- API Inconsistency
-
-The API has an inconsistency in naming:
-- `user_login_v2` **response** returns the field as `login_cookie` (singular)
-- All v2 **action** endpoints expect the field as `login_cookies` (plural)
-
-**Always use `login_cookies` (plural) in request bodies.** The value is the same string.
+This Hermes bundle is the read-only public-data subset. It intentionally excludes login/write/cookie/proxy implementation details. Use the repository root documentation only for manual review of the complete all-endpoints surface.
 
 ---
 
@@ -290,9 +280,6 @@ Pass `cursor=NEXT_CURSOR` to get next page. First page: omit cursor or `cursor="
 | Error | Cause | Fix |
 |-------|-------|-----|
 | Invalid API key | Wrong or missing `X-API-Key` header | Check key in dashboard |
-| Invalid login_cookie | Expired or faulty cookie | Re-login via `user_login_v2` with valid `totp_secret` |
-| 400 on v2 actions | Faulty cookie from login without proper `totp_secret` | Re-login with 16-char string `totp_secret` |
-| Proxy error | Bad proxy format or dead proxy | Format: `http://user:pass@host:port`, use residential |
 | Rate limited | Exceeded QPS for your balance tier | Back off, add balance for higher QPS |
 | Account suspended | Twitter account banned | Use different account |
 | 404 on endpoint | Wrong path | Check correct path in this doc |

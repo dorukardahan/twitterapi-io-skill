@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.12
+
+- docs: further clean the Hermes read-only bundle by removing login/write/proxy pricing, implementation notes, and error rows from `skills/twitterapi-io/SKILL.md`.
+
 ## 3.8.11
 
 - packaging: make the Hermes bundle under `skills/twitterapi-io/` a read-only installable subset by excluding write/login/webhook mutation reference files that trigger community-skill safety blocking.
