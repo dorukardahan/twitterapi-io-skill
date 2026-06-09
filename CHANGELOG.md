@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.11
+
+- packaging: make the Hermes bundle under `skills/twitterapi-io/` a read-only installable subset by excluding write/login/webhook mutation reference files that trigger community-skill safety blocking.
+- docs: clarify that the bundled Hermes skill is for public read/search/timeline/replies/quotes/trends workflows, while the repository root keeps complete all-endpoints documentation for manual review.
+
 ## 3.8.10
 
 - packaging: add a multi-file Hermes skill bundle under `skills/twitterapi-io/` so installs can include `references/*.md` instead of only the root `SKILL.md`.

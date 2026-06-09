@@ -1,22 +1,22 @@
 ---
 name: twitterapi-io
-description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
+description: Interact with Twitter/X via TwitterAPI.io public read endpoints — search tweets, get user info, timelines, mentions, replies, quotes, trends, pagination, deduplication, and analysis. This Hermes bundle is read-only by default and intentionally excludes write/login/cookie/proxy endpoint references.
 metadata:
-  version: 3.8.10
+  version: 3.8.11
   updated: "2026-06-09"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.10
+# TwitterAPI.io skill v3.8.11 — Hermes read-only bundle
 
-Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
-Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
+Access public Twitter/X data via [TwitterAPI.io](https://twitterapi.io) REST API.
+Use this Hermes bundle for read-only search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
 
 Docs: https://docs.twitterapi.io | Dashboard: https://twitterapi.io/dashboard
 
 ## Agent safety default
 
-This skill documents both read and write endpoints, but agents should treat Twitter/X operations as **read-only by default**. Use public/read endpoints for search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
+This Hermes bundle intentionally documents the public/read workflow only. Agents should treat Twitter/X operations as **read-only by default**.
 
 Do not use write, login, cookie, proxy, private-data, DM, follow, like, retweet, post, or profile-update endpoints unless the user gives explicit confirmation for the exact action and account. Never ask for or store account passwords, `auth_token`, `ct0`, `login_cookies`, or proxy credentials for a read-only workflow.
 
@@ -26,7 +26,6 @@ Do not use write, login, cookie, proxy, private-data, DM, follow, like, retweet,
 
 1. Get API key: https://twitterapi.io/dashboard ($0.10 free credits, no CC)
 2. Store the key in a `.env` file or your shell's secure config (do not use raw `export` with the actual key in the terminal -- it gets saved to shell history).
-3. For write actions, you also need `login_cookies` from v2 login + residential `proxy`.
 
 Base URL: `https://api.twitterapi.io`
 Auth header: `X-API-Key: $TWITTERAPI_IO_KEY` (all requests)
@@ -192,12 +191,12 @@ if dtr and len(text) <= 280:
 
 ## Endpoint reference
 
-For detailed endpoint documentation with curl examples, consult the reference files:
+For detailed endpoint documentation with curl examples, consult the bundled reference files:
 
 - For READ endpoint documentation (35 GET endpoints total; 32 non-webhook entries in `references/read-endpoints.md`), consult `references/read-endpoints.md`
-- For WRITE endpoint documentation (33 POST/PATCH/PUT/DELETE endpoints total; 28 non-webhook entries in `references/write-endpoints.md`), consult `references/write-endpoints.md`
-- For Webhook and Stream endpoint documentation (8 `/oapi/` endpoints: 3 GET + 5 write), consult `references/webhook-stream-endpoints.md`
 - For the complete endpoint index table (all 68 active endpoints), consult `references/endpoint-index.md`
+
+Write/login/cookie/proxy and webhook mutation examples are intentionally excluded from this Hermes bundle so read-only agent installs pass safety scanning. The repository root still contains the complete all-endpoints documentation for non-agent/manual review.
 
 ---
 
@@ -302,28 +301,19 @@ Pass `cursor=NEXT_CURSOR` to get next page. First page: omit cursor or `cursor="
 
 ## Common workflows
 
-### Get user ID from username (needed for follow, DM)
+### Get user ID from username
 1. `GET /twitter/user/info?userName=TARGET` -> extract `data.id`
-2. Use that numeric ID in follow/DM calls
+2. Use that numeric ID for read endpoints that require `userId`
 Note: `get_user_mentions` accepts `userName` directly -- no ID lookup needed.
 
-### Post tweet with image
-1. Upload: `POST /twitter/upload_media_v2` -> get `media_id`
-2. Tweet: `POST /twitter/create_tweet_v2` with `media_ids: ["media_id"]`
+### Fetch an account's latest public posts
+Use `GET /twitter/user/last_tweets?userName=USERNAME` with cursor pagination. Stop when `has_next_page` is false, the cursor repeats, or client-side date/account limits are reached.
 
-### Reply to a tweet
-`POST /twitter/create_tweet_v2` with `tweet_text` + `reply_to_tweet_id`
+### Fetch public mentions
+Use `GET /twitter/user/mentions?userName=USERNAME&sinceTime=...&untilTime=...`. Prefer Unix `sinceTime`/`untilTime` params over degraded search date operators.
 
-### Quote tweet
-`POST /twitter/create_tweet_v2` with `tweet_text` + `attachment_url` (full tweet URL)
-
-### Post to community
-`POST /twitter/create_tweet_v2` with `tweet_text` + `community_id`
-
-### Monitor accounts for new tweets (cheapest method)
-Use Stream endpoints instead of polling `/twitter/user/last_tweets`:
-1. `POST /oapi/x_user_stream/add_user_to_monitor_tweet` for each account
-2. Set up webhook to receive notifications
+### Fetch public replies and quotes under a tweet
+Use `GET /twitter/tweet/replies` and `GET /twitter/tweet/quotes` with `tweetId`, optional Unix time bounds, and cursor pagination.
 
 ---
 
@@ -342,8 +332,6 @@ Also available: `twitterapi-docs` MCP server for querying this documentation pro
 ## Important notes
 
 - **Read endpoints** need only API key. No Twitter account needed.
-- **Write endpoints** need `login_cookies` from v2 login + residential proxy.
-- **V3 endpoints are offline. Only V2 write endpoints are available.**
-- **2FA strongly recommended** -- use 16-character string `totp_secret` for reliable login.
-- **Proxy mandatory** for all write actions. Use high-quality residential proxies.
+- This Hermes bundle excludes write/login/cookie/proxy references by design.
+- For agent workflows, keep Twitter/X operations read-only unless the user explicitly confirms one exact write action in a separate workflow.
 - **Credits never expire** once recharged. Bonus credits valid 30 days.

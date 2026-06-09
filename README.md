@@ -18,13 +18,15 @@ Install the whole skill directory when your agent supports multi-file skills. If
 
 ## Use with Hermes Agent
 
-Install the bundled multi-file skill so `references/*.md` are available through `skill_view`:
+Install the bundled multi-file read-only skill so public read endpoint references are available through `skill_view`:
 
 ```bash
 hermes skills install dorukardahan/twitterapi-io-skill/skills/twitterapi-io --force
 ```
 
 Then start a fresh session or run `/reset` before relying on the updated skill context.
+
+The Hermes bundle intentionally excludes write/login/cookie/proxy reference files so community-skill safety scanning keeps the install safe. The repository root still includes the complete all-endpoints documentation for manual/non-agent review.
 
 ## Use with OpenClaw
 
