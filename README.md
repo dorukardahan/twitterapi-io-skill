@@ -6,7 +6,7 @@ No Twitter developer account needed. Works with any AI assistant.
 
 ## How it works
 
-`SKILL.md` is a single file that teaches an LLM how to use the Twitter API. It contains:
+`SKILL.md` teaches an LLM how to use the TwitterAPI.io API. Detailed endpoint examples are split into `references/*.md` so agents can load the exact read/write/webhook reference only when needed. The skill contains:
 
 - Every endpoint with method, path, and curl example
 - Required and optional query parameters for each endpoint
@@ -14,7 +14,17 @@ No Twitter developer account needed. Works with any AI assistant.
 - Authentication, pricing, rate limits, pagination patterns
 - Login flow for write actions (tweet, like, retweet, follow)
 
-Drop it into your AI tool's context and it can start making real Twitter API calls.
+Install the whole skill directory when your agent supports multi-file skills. If your tool only accepts a single context file, use the root `SKILL.md` as the overview and consult the files in `references/` for endpoint-level details.
+
+## Use with Hermes Agent
+
+Install the bundled multi-file skill so `references/*.md` are available through `skill_view`:
+
+```bash
+hermes skills install dorukardahan/twitterapi-io-skill/skills/twitterapi-io --force
+```
+
+Then start a fresh session or run `/reset` before relying on the updated skill context.
 
 ## Use with OpenClaw
 

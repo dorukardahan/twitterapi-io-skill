@@ -26,19 +26,20 @@ jobs:
 
           import yaml
 
-          content = Path("SKILL.md").read_text(encoding="utf-8")
-          if not content.startswith("---\n"):
-              raise SystemExit("SKILL.md must start with YAML frontmatter")
-          match = re.search(r"\n---\s*\n", content[4:])
-          if not match:
-              raise SystemExit("SKILL.md frontmatter is not closed")
-          frontmatter = yaml.safe_load(content[4:match.start() + 4])
-          if not isinstance(frontmatter, dict):
-              raise SystemExit("SKILL.md frontmatter must parse as a mapping")
-          for field in ("name", "description"):
-              if not frontmatter.get(field):
-                  raise SystemExit(f"SKILL.md frontmatter missing required field: {field}")
-          json.dumps(frontmatter)
+          for skill_path in (Path("SKILL.md"), Path("skills/twitterapi-io/SKILL.md")):
+              content = skill_path.read_text(encoding="utf-8")
+              if not content.startswith("---\n"):
+                  raise SystemExit(f"{skill_path} must start with YAML frontmatter")
+              match = re.search(r"\n---\s*\n", content[4:])
+              if not match:
+                  raise SystemExit(f"{skill_path} frontmatter is not closed")
+              frontmatter = yaml.safe_load(content[4:match.start() + 4])
+              if not isinstance(frontmatter, dict):
+                  raise SystemExit(f"{skill_path} frontmatter must parse as a mapping")
+              for field in ("name", "description"):
+                  if not frontmatter.get(field):
+                      raise SystemExit(f"{skill_path} frontmatter missing required field: {field}")
+              json.dumps(frontmatter)
           PY
 
       - name: Extract version from SKILL.md

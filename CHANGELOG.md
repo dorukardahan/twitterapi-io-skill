@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.10
+
+- packaging: add a multi-file Hermes skill bundle under `skills/twitterapi-io/` so installs can include `references/*.md` instead of only the root `SKILL.md`.
+- docs: add Hermes Agent install instructions for the bundled skill path and clarify that endpoint details are split across `SKILL.md` plus `references/`.
+
 ## 3.8.9
 
 - fix: quote `metadata.updated` in `SKILL.md` so Hermes skill loading can JSON-serialize frontmatter metadata without treating the date as a YAML timestamp object.
