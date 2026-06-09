@@ -1,4 +1,4 @@
-# READ Endpoints (32 GET endpoints, mostly API key only)
+# Public READ Endpoints (31 GET endpoints, API key only)
 
 ## Tweet Endpoints
 
@@ -183,17 +183,6 @@ curl -s "https://api.twitterapi.io/twitter/list/tweets_timeline?listId=LISTID" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `listId` (required), `cursor` -- 20 tweets/page. Cost: 150 credits/call.
-
-## DM Endpoints (Read)
-
-**Get DM History by User ID** `GET /twitter/get_dm_history_by_user_id`
-```bash
-curl -s "https://api.twitterapi.io/twitter/get_dm_history_by_user_id?login_cookies=COOKIE&user_id=USERID" \
-  -H "X-API-Key: $TWITTERAPI_IO_KEY"
-```
-Params: `login_cookies` (required), `user_id` (required), `proxy` (optional but recommended, residential proxy URL)
-Note: Requires `login_cookies` from `user_login_v2` (unlike most read endpoints). Returns DM conversation history with a specific user.
-> ⚠️ **Security warning:** `login_cookies` is sent as a GET query parameter, meaning it appears in URL logs, browser history, and server access logs. Use HTTPS and avoid logging request URLs when calling this endpoint.
 
 ## Community Endpoints (Read)
 

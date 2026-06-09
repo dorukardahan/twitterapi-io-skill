@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.13
+
+- packaging: remove the cookie-based DM history endpoint from the Hermes bundled read reference and replace the bundled endpoint index with a public/API-key-only read index.
+
 ## 3.8.12
 
 - docs: further clean the Hermes read-only bundle by removing login/write/proxy pricing, implementation notes, and error rows from `skills/twitterapi-io/SKILL.md`.
