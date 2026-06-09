@@ -16,6 +16,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python3 -m pip install --user pyyaml
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          import yaml
+
+          content = Path("SKILL.md").read_text(encoding="utf-8")
+          if not content.startswith("---\n"):
+              raise SystemExit("SKILL.md must start with YAML frontmatter")
+          match = re.search(r"\n---\s*\n", content[4:])
+          if not match:
+              raise SystemExit("SKILL.md frontmatter is not closed")
+          frontmatter = yaml.safe_load(content[4:match.start() + 4])
+          if not isinstance(frontmatter, dict):
+              raise SystemExit("SKILL.md frontmatter must parse as a mapping")
+          for field in ("name", "description"):
+              if not frontmatter.get(field):
+                  raise SystemExit(f"SKILL.md frontmatter missing required field: {field}")
+          json.dumps(frontmatter)
+          PY
+
       - name: Extract version from SKILL.md
         id: version
         run: |

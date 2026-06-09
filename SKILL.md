@@ -2,17 +2,23 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.8
-  updated: 2026-05-10
+  version: 3.8.9
+  updated: "2026-06-09"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.8
+# TwitterAPI.io skill v3.8.9
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
 
 Docs: https://docs.twitterapi.io | Dashboard: https://twitterapi.io/dashboard
+
+## Agent safety default
+
+This skill documents both read and write endpoints, but agents should treat Twitter/X operations as **read-only by default**. Use public/read endpoints for search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
+
+Do not use write, login, cookie, proxy, private-data, DM, follow, like, retweet, post, or profile-update endpoints unless the user gives explicit confirmation for the exact action and account. Never ask for or store account passwords, `auth_token`, `ct0`, `login_cookies`, or proxy credentials for a read-only workflow.
 
 ---
 
