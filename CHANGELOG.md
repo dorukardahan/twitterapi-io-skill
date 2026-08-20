@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.14
+
+- pricing: sync to live OpenAPI — follower/following endpoints now tiered (1-3 credits/item by page size, min 60 credits/call), follower IDs tiered (0.45-2 credits/ID by batch, min 100 credits/call), Login V2 trial price 300 -> 500 credits ($0.005). Updated SKILL.md pricing table, read/write references, and Hermes bundle.
+
 ## 3.8.13
 
 - packaging: remove the cookie-based DM history endpoint from the Hermes bundled read reference and replace the bundled endpoint index with a public/API-key-only read index.

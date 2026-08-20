@@ -105,14 +105,14 @@ Params: `userId` (optional), `includeReplies` (boolean, optional, default false)
 curl -s "https://api.twitterapi.io/twitter/user/followers?userName=USERNAME" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userName` (required), `cursor`, `pageSize` (integer, optional, default 200) -- newest first
+Params: `userName` (required), `cursor`, `pageSize` (integer, optional, default 200) -- newest first. Cost: tiered -- 1 credit/follower at pageSize 200, 2 credits (100-199), 3 credits (20-99); minimum 60 credits/call.
 
 **Get User Followings** `GET /twitter/user/followings`
 ```bash
 curl -s "https://api.twitterapi.io/twitter/user/followings?userName=USERNAME" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Params: `userName` (required), `cursor`, `pageSize` (integer, optional, default 200) -- newest first
+Params: `userName` (required), `cursor`, `pageSize` (integer, optional, default 200) -- newest first. Cost: tiered -- 1 credit/following at pageSize 200, 2 credits (100-199), 3 credits (20-99); minimum 60 credits/call.
 
 **Get User Verified Followers** `GET /twitter/user/verifiedFollowers`
 ```bash
@@ -128,7 +128,7 @@ curl -s "https://api.twitterapi.io/twitter/user/followers_ids?userName=USERNAME&
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
 Params: `userName` (optional), `userId` (optional, alternative to userName — provide at least one), `count` (integer, optional, min 50, max 5000, default 5000), `cursor`
-Returns follower IDs only (no profile metadata) for large-scale graph collection. Up to 5,000 IDs per call.
+Returns follower IDs only (no profile metadata) for large-scale graph collection. Up to 5,000 IDs per call. Cost: tiered -- 0.45 credits/ID (4000-5000 returned), 1 credit (200-3999), 2 credits (50-199); minimum 100 credits/call.
 
 **Get User Mentions** `GET /twitter/user/mentions`
 ```bash

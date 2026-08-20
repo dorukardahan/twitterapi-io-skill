@@ -8,7 +8,7 @@ All v2 write endpoints require:
 
 ## Authentication
 
-**Login V2** `POST /twitter/user_login_v2` (300 credits)
+**Login V2** `POST /twitter/user_login_v2` (500 credits, trial price $0.005)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/user_login_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \

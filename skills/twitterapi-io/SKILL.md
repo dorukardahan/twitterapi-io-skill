@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io public read endpoints — search tweets, get user info, timelines, mentions, replies, quotes, trends, pagination, deduplication, and analysis. This Hermes bundle is read-only by default and intentionally excludes write/login/cookie/proxy endpoint references.
 metadata:
-  version: 3.8.13
-  updated: "2026-06-09"
+  version: 3.8.14
+  updated: "2026-08-20"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.13 — Hermes read-only bundle
+# TwitterAPI.io skill v3.8.14 — Hermes read-only bundle
 
 Access public Twitter/X data via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use this Hermes bundle for read-only search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
@@ -39,7 +39,9 @@ Auth header: `X-API-Key: $TWITTERAPI_IO_KEY` (all requests)
 | Tweets (per returned tweet) | 15 | $0.15 |
 | Profiles (per returned profile) | 18 | $0.18 |
 | Profiles batch 100+ (per profile) | 10 | $0.10 |
-| Followers (per returned follower) | 15 | $0.15 |
+| Followers (tiered, per follower) | 1-3 | $0.01-0.03 |
+| Followings (tiered, per following) | 1-3 | $0.01-0.03 |
+| Follower IDs (tiered, per ID) | 0.45-2 | $0.0045-0.02 |
 | Verified followers (per follower) | 30 | $0.30 |
 | Minimum per API call | 15 | $0.00015 |
 | List endpoint calls | 150 | $0.0015 |
@@ -48,7 +50,7 @@ Auth header: `X-API-Key: $TWITTERAPI_IO_KEY` (all requests)
 | Community info | 20 | $0.0002 |
 
 
-Note: If the API returns 0 or 1 item, you are still charged the minimum (15 credits).
+Note: If the API returns 0 or 1 item, you are still charged the minimum (15 credits). Follower/following endpoints use tiered pricing: 1 credit/item at max page size (200), 2 credits (100-199 returned), 3 credits (20-99 returned); minimum 60 credits/call. Follower IDs: 0.45 credits/ID (4000-5000 returned), 1 credit (200-3999), 2 credits (50-199); minimum 100 credits/call.
 
 ---
 
