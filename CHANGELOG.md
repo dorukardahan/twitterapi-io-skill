@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.15
+
+- maintenance: verify all 68 active endpoints, parameters, placements, category counts, and curl examples against the live OpenAPI; refresh the canonical ClawHub release.
+
 ## 3.8.14
 
 - pricing: sync to live OpenAPI — follower/following endpoints now tiered (1-3 credits/item by page size, min 60 credits/call), follower IDs tiered (0.45-2 credits/ID by batch, min 100 credits/call), Login V2 trial price 300 -> 500 credits ($0.005). Updated SKILL.md pricing table, read/write references, and Hermes bundle.

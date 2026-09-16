@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io public read endpoints — search tweets, get user info, timelines, mentions, replies, quotes, trends, pagination, deduplication, and analysis. This Hermes bundle is read-only by default and intentionally excludes write/login/cookie/proxy endpoint references.
 metadata:
-  version: 3.8.14
-  updated: "2026-08-20"
+  version: 3.8.15
+  updated: "2026-09-16"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.14 — Hermes read-only bundle
+# TwitterAPI.io skill v3.8.15 — Hermes read-only bundle
 
 Access public Twitter/X data via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use this Hermes bundle for read-only search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
