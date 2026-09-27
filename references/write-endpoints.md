@@ -2,7 +2,7 @@
 
 Most write endpoints use V2, but this file also includes the still-active legacy write/auth paths that remain in the live OpenAPI spec.
 
-All v2 write endpoints require:
+V2 account actions (excluding login) require:
 1. **login_cookies** -- from `POST /twitter/user_login_v2`
 2. **proxy** -- residential proxy URL: `http://user:pass@host:port`
 
@@ -18,13 +18,13 @@ curl -s -X POST "https://api.twitterapi.io/twitter/user_login_v2" \
     "email": "EMAIL",
     "password": "PASSWORD",
     "proxy": "http://user:pass@host:port",
-    "totp_secret": "2FA_SECRET_16CHAR"
+    "totp_secret": "BASE32_TOTP_SECRET"
   }'
 ```
 Response: `{ "login_cookie": "...", "status": "success", "msg": "..." }`
 
 Important:
-- `totp_secret` must be a **16-character string** (not numbers). Without it, login may succeed but the cookie will be faulty, causing 400 errors on all v2 action endpoints.
+- `totp_secret` is **optional but strongly recommended**. Use the base32 seed shown by X when enabling 2FA (not a 6-digit code); the OpenAPI does not specify an exact 16-character length. Without 2FA, the returned cookie may be flagged and unable to post.
 - Cookie stays valid indefinitely with residential proxies + good-standing account.
 - Response field is `login_cookie` (singular) but use `login_cookies` (plural) in action requests.
 

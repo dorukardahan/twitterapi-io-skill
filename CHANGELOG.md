@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.16
+
+- docs: align Login V2 TOTP guidance with the live OpenAPI: optional, strongly recommended base32 seed, not a fixed 16-character value or a 6-digit code.
+- docs: clarify active legacy write paths and authentication exceptions for login, DM history, and `/oapi/` endpoints.
+
 ## 3.8.15
 
 - maintenance: verify all 68 active endpoints, parameters, placements, category counts, and curl examples against the live OpenAPI; refresh the canonical ClawHub release.

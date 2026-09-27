@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.15
-  updated: "2026-09-16"
+  version: 3.8.16
+  updated: "2026-09-27"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.15
+# TwitterAPI.io skill v3.8.16
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -295,7 +295,7 @@ Pass `cursor=NEXT_CURSOR` to get next page. First page: omit cursor or `cursor="
 |-------|-------|-----|
 | Invalid API key | Wrong or missing `X-API-Key` header | Check key in dashboard |
 | Invalid login_cookie | Expired or faulty cookie | Re-login via `user_login_v2` with valid `totp_secret` |
-| 400 on v2 actions | Faulty cookie from login without proper `totp_secret` | Re-login with 16-char string `totp_secret` |
+| 400 on v2 actions | Faulty cookie from login without proper `totp_secret` | Re-login with the base32 TOTP seed (not a 6-digit code) |
 | Proxy error | Bad proxy format or dead proxy | Format: `http://user:pass@host:port`, use residential |
 | Rate limited | Exceeded QPS for your balance tier | Back off, add balance for higher QPS |
 | Account suspended | Twitter account banned | Use different account |
@@ -344,9 +344,9 @@ Also available: `twitterapi-docs` MCP server for querying this documentation pro
 
 ## Important notes
 
-- **Read endpoints** need only API key. No Twitter account needed.
-- **Write endpoints** need `login_cookies` from v2 login + residential proxy.
-- **V3 endpoints are offline. Only V2 write endpoints are available.**
-- **2FA strongly recommended** -- use 16-character string `totp_secret` for reliable login.
-- **Proxy mandatory** for all write actions. Use high-quality residential proxies.
+- **Most read endpoints** need only the API key; DM history also requires `login_cookies` in the query.
+- **V2 account actions** need `login_cookies` from v2 login + residential proxy. Login itself uses account credentials; legacy actions use `auth_session`, and `/oapi/` mutations use the API key.
+- **V3 endpoints are offline.** Prefer V2; the active legacy auth/write paths are also documented in `references/write-endpoints.md`.
+- **2FA strongly recommended** -- `totp_secret` is optional; when provided, use the base32 seed shown by X, not a 6-digit code. No exact 16-character length is specified by the OpenAPI.
+- **Proxy mandatory** for Twitter account login/actions. Use high-quality residential proxies. `/oapi/` mutations do not take a proxy.
 - **Credits never expire** once recharged. Bonus credits valid 30 days.
