@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io public read endpoints — search tweets, get user info, timelines, mentions, replies, quotes, trends, pagination, deduplication, and analysis. This Hermes bundle is read-only by default and intentionally excludes write/login/cookie/proxy endpoint references.
 metadata:
-  version: 3.8.16
-  updated: "2026-09-27"
+  version: 3.8.17
+  updated: "2026-10-09"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.16 — Hermes read-only bundle
+# TwitterAPI.io skill v3.8.17 — Hermes read-only bundle
 
 Access public Twitter/X data via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use this Hermes bundle for read-only search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
@@ -25,10 +25,23 @@ Do not use write, login, cookie, proxy, private-data, DM, follow, like, retweet,
 ## Setup
 
 1. Get API key: https://twitterapi.io/dashboard ($0.10 free credits, no CC)
-2. Store the key in a `.env` file or your shell's secure config (do not use raw `export` with the actual key in the terminal -- it gets saved to shell history).
+2. Store the key once in your OS secret store. Do not put it in shell startup files (`.zshenv`, `.bashrc`, `.profile`), where every process inherits it, and do not type a raw `export` with the value (it lands in shell history). These commands prompt for the key, so it never touches history:
+   - macOS Keychain: `security add-generic-password -a "$USER" -s twitterapi-io -w`
+   - Linux (libsecret): `secret-tool store --label="TwitterAPI.io" service twitterapi-io`
+   - Fallback: a file only you can read, `${XDG_CONFIG_HOME:-$HOME/.config}/twitterapi-io/api_key` (mode `0600`)
 
 Base URL: `https://api.twitterapi.io`
 Auth header: `X-API-Key: $TWITTERAPI_IO_KEY` (all requests)
+
+### Load the key for a command
+
+The curl examples read `$TWITTERAPI_IO_KEY`. When it is not already set, start the shell command with this line. It loads the key for that one shell and never prints it. Agents that run each tool call in a new shell need it at the start of every call that hits the API:
+
+```bash
+export TWITTERAPI_IO_KEY="${TWITTERAPI_IO_KEY:-$(security find-generic-password -s twitterapi-io -w 2>/dev/null || secret-tool lookup service twitterapi-io 2>/dev/null || cat "${XDG_CONFIG_HOME:-$HOME/.config}/twitterapi-io/api_key" 2>/dev/null)}"
+```
+
+Never echo, print, log, or paste the key. Do not run `set -x`, `env`, or `printenv` in a shell that holds it, and never write it into files, commits, or chat.
 
 ---
 

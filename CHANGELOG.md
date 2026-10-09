@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.17
+
+- docs: store the API key in the OS secret store (macOS Keychain, libsecret, or an owner-only file) instead of shell startup files, and add a one-line loader that sets `TWITTERAPI_IO_KEY` for a single shell without printing it.
+
 ## 3.8.16
 
 - docs: align Login V2 TOTP guidance with the live OpenAPI: optional, strongly recommended base32 seed, not a fixed 16-character value or a 6-digit code.
