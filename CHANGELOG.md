@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.18
+
+- maintenance: verify all 68 active endpoints, required parameters, request locations, method/category counts, and curl-example coverage against the live OpenAPI and MCP documentation snapshot.
+
 ## 3.8.17
 
 - docs: store the API key in the OS secret store (macOS Keychain, libsecret, or an owner-only file) instead of shell startup files, and add a one-line loader that sets `TWITTERAPI_IO_KEY` for a single shell without printing it.
