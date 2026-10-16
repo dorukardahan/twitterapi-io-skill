@@ -41,7 +41,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/create_tweet_v2" \
     "proxy": "http://user:pass@host:port"
   }'
 ```
-Optional: `reply_to_tweet_id`, `attachment_url` (quote tweet URL), `community_id`, `is_note_tweet` (Premium only, >280 chars), `media_ids` (array), `quote_tweet_id` (tweet ID alternative to `attachment_url`), `schedule_for` (ISO-8601 timestamp for scheduled posting)
+Optional: `reply_to_tweet_id`, `attachment_url` (quote tweet URL), `community_id`, `is_note_tweet` (Premium only, >280 chars), `media_ids` (array)
 Response: `{ "tweet_id": "1234...", "status": "success", "msg": "..." }`
 
 **Delete Tweet** `POST /twitter/delete_tweet_v2` (200 credits)

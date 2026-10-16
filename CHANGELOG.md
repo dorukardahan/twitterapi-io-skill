@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.19
+
+- docs: remove `quote_tweet_id` and `schedule_for` from the V2 create-tweet reference; neither field appears in the live OpenAPI request schema. The legacy create-tweet endpoint still supports `quote_tweet_id`.
+
 ## 3.8.18
 
 - maintenance: verify all 68 active endpoints, required parameters, request locations, method/category counts, and curl-example coverage against the live OpenAPI and MCP documentation snapshot.
