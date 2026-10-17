@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.20
+
+- docs: align tweet creation, DM, profile update, and community action pricing with the live OpenAPI (200 credits / $0.002); update Login V2 to 10,000 credits / $0.10 and preserve media pricing.
+
 ## 3.8.19
 
 - docs: remove `quote_tweet_id` and `schedule_for` from the V2 create-tweet reference; neither field appears in the live OpenAPI request schema. The legacy create-tweet endpoint still supports `quote_tweet_id`.

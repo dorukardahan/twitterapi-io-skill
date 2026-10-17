@@ -8,7 +8,7 @@ V2 account actions (excluding login) require:
 
 ## Authentication
 
-**Login V2** `POST /twitter/user_login_v2` (500 credits, trial price $0.005)
+**Login V2** `POST /twitter/user_login_v2` (10,000 credits, $0.10 per call)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/user_login_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -30,7 +30,7 @@ Important:
 
 ## Tweet Actions
 
-**Create Tweet** `POST /twitter/create_tweet_v2` (300 credits)
+**Create Tweet** `POST /twitter/create_tweet_v2` (200 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/create_tweet_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -129,7 +129,7 @@ Note: Uses `auth_session` (V1 login flow via `login_by_2fa`), not `login_cookies
 
 ## DM Actions
 
-**Send DM** `POST /twitter/send_dm_to_user` (300 credits)
+**Send DM** `POST /twitter/send_dm_to_user` (200 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/send_dm_to_user" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -154,7 +154,7 @@ Returns: `{ "media_id": "...", "status": "success" }` -- use in `create_tweet_v2
 
 ## Profile Updates (PATCH)
 
-**Update Avatar** `PATCH /twitter/update_avatar_v2` (300 credits) -- **multipart/form-data**, not JSON!
+**Update Avatar** `PATCH /twitter/update_avatar_v2` (200 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_avatar_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -164,7 +164,7 @@ curl -s -X PATCH "https://api.twitterapi.io/twitter/update_avatar_v2" \
 ```
 Image: JPG/PNG, 400x400px recommended, max 700KB. Uses binary file upload (not URL).
 
-**Update Banner** `PATCH /twitter/update_banner_v2` (300 credits) -- **multipart/form-data**, not JSON!
+**Update Banner** `PATCH /twitter/update_banner_v2` (200 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_banner_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -174,7 +174,7 @@ curl -s -X PATCH "https://api.twitterapi.io/twitter/update_banner_v2" \
 ```
 Image: JPG/PNG, 1500x500px recommended, max 2MB. Uses binary file upload (not URL).
 
-**Update Profile** `PATCH /twitter/update_profile_v2` (300 credits)
+**Update Profile** `PATCH /twitter/update_profile_v2` (200 credits)
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_profile_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -194,7 +194,7 @@ Optional fields: `name` (max 50 chars), `description` (max 160 chars), `location
 
 ## Community Actions (POST, v2)
 
-**Create Community** `POST /twitter/create_community_v2` (300 credits)
+**Create Community** `POST /twitter/create_community_v2` (200 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/create_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" -H "Content-Type: application/json" \
@@ -202,7 +202,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/create_community_v2" \
 ```
 Body: `login_cookies` (required), `name` (required), `description` (required), `proxy` (required)
 
-**Join Community** `POST /twitter/join_community_v2` (300 credits)
+**Join Community** `POST /twitter/join_community_v2` (200 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/join_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -211,7 +211,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/join_community_v2" \
 ```
 Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
-**Leave Community** `POST /twitter/leave_community_v2` (300 credits)
+**Leave Community** `POST /twitter/leave_community_v2` (200 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/leave_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -220,7 +220,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/leave_community_v2" \
 ```
 Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
-**Delete Community** `POST /twitter/delete_community_v2` (300 credits)
+**Delete Community** `POST /twitter/delete_community_v2` (200 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/delete_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \

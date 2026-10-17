@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.19
-  updated: "2026-10-16"
+  version: 3.8.20
+  updated: "2026-10-17"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.19
+# TwitterAPI.io skill v3.8.20
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -62,8 +62,8 @@ Never echo, print, log, or paste the key. Do not run `set -x`, `env`, or `printe
 | Check follow relationship | 100 | $0.001 |
 | Get article | 100 | $0.001 |
 | Community info | 20 | $0.0002 |
-| Write actions (tweet, like, RT, follow) | 200-300 | $0.002-0.003 |
-| Login V2 | 500 | $0.005 |
+| Write actions (tweet, like, RT, follow) | 200 | $0.002 |
+| Login V2 | 10,000 | $0.10 |
 | Legacy login (step 1 / 2FA) | 300 | $0.003 |
 
 Note: If the API returns 0 or 1 item, you are still charged the minimum (15 credits). Follower/following endpoints use tiered pricing: 1 credit/item at max page size (200), 2 credits (100-199 returned), 3 credits (20-99 returned); minimum 60 credits/call. Follower IDs: 0.45 credits/ID (4000-5000 returned), 1 credit (200-3999), 2 credits (50-199); minimum 100 credits/call.
