@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.20
-  updated: "2026-10-17"
+  version: 3.8.21
+  updated: "2026-10-18"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.20
+# TwitterAPI.io skill v3.8.21
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -87,13 +87,13 @@ Note: If the API returns 0 or 1 item, you are still charged the minimum (15 cred
 OpenAPI now also exposes several legacy auth/write paths alongside V2 endpoints. Prefer V2 where available.
 V3 endpoints were taken offline by TwitterAPI.io in March 2026. Use V2 for write operations. For mission-critical tweet posting, consider Twitter's official API.
 
-### login_cookie vs login_cookies -- API Inconsistency
+### Login cookie field naming
 
-The API has an inconsistency in naming:
-- `user_login_v2` **response** returns the field as `login_cookie` (singular)
-- All v2 **action** endpoints expect the field as `login_cookies` (plural)
+The current OpenAPI uses `login_cookies` (plural) consistently:
+- `user_login_v2` **response** includes `login_cookies`, `status`, and `message`.
+- V2 **action** request bodies expect `login_cookies` (plural).
 
-**Always use `login_cookies` (plural) in request bodies.** The value is the same string.
+Use the returned `login_cookies` value in action requests. DM history takes `login_cookies` in the query.
 
 ---
 

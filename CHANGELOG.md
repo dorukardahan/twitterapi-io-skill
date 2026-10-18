@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.21
+
+- docs: align Login V2 response names with live OpenAPI (`login_cookies`, `status`, `message`) and remove the obsolete singular-response/plural-request distinction.
+
 ## 3.8.20
 
 - docs: align tweet creation, DM, profile update, and community action pricing with the live OpenAPI (200 credits / $0.002); update Login V2 to 10,000 credits / $0.10 and preserve media pricing.

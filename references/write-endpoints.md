@@ -21,12 +21,12 @@ curl -s -X POST "https://api.twitterapi.io/twitter/user_login_v2" \
     "totp_secret": "BASE32_TOTP_SECRET"
   }'
 ```
-Response: `{ "login_cookie": "...", "status": "success", "msg": "..." }`
+Response (current OpenAPI): `{ "login_cookies": "...", "status": "success", "message": "..." }`
 
 Important:
 - `totp_secret` is **optional but strongly recommended**. Use the base32 seed shown by X when enabling 2FA (not a 6-digit code); the OpenAPI does not specify an exact 16-character length. Without 2FA, the returned cookie may be flagged and unable to post.
 - Cookie stays valid indefinitely with residential proxies + good-standing account.
-- Response field is `login_cookie` (singular) but use `login_cookies` (plural) in action requests.
+- The current OpenAPI names the response field `login_cookies` (plural); use that value as `login_cookies` in action requests.
 
 ## Tweet Actions
 
