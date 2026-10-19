@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.22
+
+- maintenance: verify all 68 active endpoints, required parameters, query/body placement, method/category counts, and curl examples against live OpenAPI and MCP docs; no endpoint changes.
+- maintenance: companion MCP release tooling updates npm 11.21.0 to 11.21.1 to resolve bundled dependency audit findings. The unpatched braces development-tooling advisory remains tracked in the MCP changelog.
+
 ## 3.8.21
 
 - docs: align Login V2 response names with live OpenAPI (`login_cookies`, `status`, `message`) and remove the obsolete singular-response/plural-request distinction.
