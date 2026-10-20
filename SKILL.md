@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 68 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.22
-  updated: "2026-10-19"
+  version: 3.8.23
+  updated: "2026-10-20"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.22
+# TwitterAPI.io skill v3.8.23
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -52,7 +52,7 @@ Never echo, print, log, or paste the key. Do not run `set -x`, `env`, or `printe
 |----------|---------|-------------|
 | Tweets (per returned tweet) | 15 | $0.15 |
 | Profiles (per returned profile) | 18 | $0.18 |
-| Profiles batch 100+ (per profile) | 10 | $0.10 |
+| Profiles batch 100+ (per profile) | 1 | $0.01 |
 | Followers (tiered, per follower) | 1-3 | $0.01-0.03 |
 | Followings (tiered, per following) | 1-3 | $0.01-0.03 |
 | Follower IDs (tiered, per ID) | 0.45-2 | $0.0045-0.02 |

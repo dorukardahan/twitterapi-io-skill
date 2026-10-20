@@ -83,7 +83,7 @@ Returns detailed bio with entities (links, mentions in bio).
 curl -s "https://api.twitterapi.io/twitter/user/batch_info_by_ids?userIds=ID1,ID2,ID3" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY"
 ```
-Returns: `{ users[], status, msg }`. Bulk 100+ users: 10 credits each (vs 18 single).
+Returns: `{ users[], status, msg }`. Pricing is based on users returned per request: 100+ users cost 1 credit each; 1-99 users cost 18 credits each.
 
 **Get User Last Tweets** `GET /twitter/user/last_tweets`
 ```bash

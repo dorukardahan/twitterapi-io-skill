@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.23
+
+- docs: sync batch user pricing with the live OpenAPI: 1-99 returned users cost 18 credits each; 100+ cost 1 credit each ($0.01/1K), previously documented as 10 credits. Update both the full skill and Hermes read-only bundle.
+- maintenance: verify 68 endpoints, 198 request parameters, category counts, and 68 curl examples; companion MCP tests pass 48/48. The development-only braces advisory GHSA-vfj7-8cjw-p6xm still has no patched release.
+
 ## 3.8.22
 
 - maintenance: verify all 68 active endpoints, required parameters, query/body placement, method/category counts, and curl examples against live OpenAPI and MCP docs; no endpoint changes.
