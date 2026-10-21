@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.24
+
+- maintenance: verify all 68 active endpoints, 198 request parameters, method/category counts, and 68 curl examples against the live OpenAPI and MCP snapshot.
+- security: companion MCP updates locked Hono from 4.13.8 to 4.13.13 for GHSA-5r4p-p66f-jhc7; the development-only braces advisory GHSA-vfj7-8cjw-p6xm remains unpatched upstream.
+
 ## 3.8.23
 
 - docs: sync batch user pricing with the live OpenAPI: 1-99 returned users cost 18 credits each; 100+ cost 1 credit each ($0.01/1K), previously documented as 10 credits. Update both the full skill and Hermes read-only bundle.
