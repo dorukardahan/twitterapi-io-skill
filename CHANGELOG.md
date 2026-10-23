@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.8.25
+
+- security: companion MCP patches runtime `ip-address` to 10.7.4; development-only braces and npm-bundled ip-address findings remain.
+
+- docs: correct the create-tweet V2 response example from `msg` to `message`, matching the live OpenAPI response schema.
+- maintenance: verify all 68 active endpoints, 198 request parameters, category counts, and 68 curl examples.
+
 ## 3.8.24
 
 - maintenance: verify all 68 active endpoints, 198 request parameters, method/category counts, and 68 curl examples against the live OpenAPI and MCP snapshot.
