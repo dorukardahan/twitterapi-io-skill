@@ -306,3 +306,89 @@ curl -s -X POST "https://api.twitterapi.io/twitter/unbookmark_tweet_v2" \
   -d '{ "login_cookies": "COOKIE", "tweet_id": "ID", "proxy": "PROXY" }'
 ```
 Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
+
+## Additional Tweet and User Actions
+
+**Block User** `POST /twitter/block_user_v2` (200 credits)
+
+Block a user. X also removes the follow relationship in both directions. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/block_user_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "user_id": "NUMERIC_USER_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
+
+**Mute User** `POST /twitter/mute_user_v2` (200 credits)
+
+Mute a user. Their posts no longer appear in your timeline. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/mute_user_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "user_id": "NUMERIC_USER_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
+
+**Pin Tweet** `POST /twitter/pin_tweet_v2` (200 credits)
+
+Pin one of your own tweets to your profile. You can only pin tweets posted by the logged-in account. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/pin_tweet_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "tweet_id": "TWEET_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
+
+**Unblock User** `POST /twitter/unblock_user_v2` (200 credits)
+
+Unblock a user. The follow relationship removed by the block is not restored. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/unblock_user_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "user_id": "NUMERIC_USER_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
+
+**Unmute User** `POST /twitter/unmute_user_v2` (200 credits)
+
+Unmute a user. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/unmute_user_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "user_id": "NUMERIC_USER_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
+
+**Unpin Tweet** `POST /twitter/unpin_tweet_v2` (200 credits)
+
+Unpin a tweet from your profile. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/unpin_tweet_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "tweet_id": "TWEET_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
+
+**Unretweet Tweet** `POST /twitter/unretweet_tweet_v2` (200 credits)
+
+Undo a retweet. If the account has not retweeted the tweet, X treats this as a no-op and the call still returns success. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+
+```bash
+curl -s -X POST "https://api.twitterapi.io/twitter/unretweet_tweet_v2" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"login_cookies": "COOKIE", "tweet_id": "TWEET_ID", "proxy": "PROXY"}'
+```
+Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)

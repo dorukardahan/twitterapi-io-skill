@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.8.26
+
+- Add seven live V2 actions: unretweet, pin/unpin tweets, mute/unmute users, and block/unblock users, with required JSON bodies and curl examples.
+- Sync coverage to 75 active endpoints: 35 GET, 40 write, including 8 webhook/stream endpoints.
+- Refresh companion MCP runtime dependency security patches.
+
 ## 3.8.25
 
 - security: companion MCP patches runtime `ip-address` to 10.7.4; development-only braces and npm-bundled ip-address findings remain.

@@ -1,7 +1,7 @@
-# Endpoint Index (68 active endpoints)
+# Endpoint Index (75 active endpoints)
 
-Note: OpenAPI spec contains 76 total paths. Excluded from this skill: 7 V3 (offline), 1 non-Twitter (`/plants`).
-Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 33 POST/PATCH/PUT/DELETE endpoints, plus 8 `/oapi/` webhook/stream endpoints (3 GET + 5 write). The READ and WRITE tables below keep `/oapi/` grouped under WEBHOOK + STREAM, so they list the 32 non-webhook GET endpoints and 28 non-webhook write endpoints separately.
+Note: OpenAPI spec contains 83 total paths. Excluded from this skill: 7 V3 (offline), 1 non-Twitter (`/plants`).
+Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 40 POST/PATCH/PUT/DELETE endpoints, plus 8 `/oapi/` webhook/stream endpoints (3 GET + 5 write). The READ and WRITE tables below keep `/oapi/` grouped under WEBHOOK + STREAM, so they list the 32 non-webhook GET endpoints and 35 non-webhook write endpoints separately.
 
 ## READ (35 GET endpoints total; 32 non-webhook rows below)
 | # | Method | Path | Category |
@@ -39,7 +39,7 @@ Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 33 POST/PATCH/P
 | 31 | GET | `/twitter/user/followers_ids` | user |
 | 32 | GET | `/twitter/user_about` | other |
 
-## WRITE (33 write endpoints total; 28 non-webhook rows below)
+## WRITE (40 write endpoints total; 35 non-webhook rows below)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 33 | POST | `/twitter/bookmark_tweet_v2` | action |
@@ -70,15 +70,22 @@ Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 33 POST/PATCH/P
 | 58 | POST | `/twitter/upload_image` | action |
 | 59 | POST | `/twitter/upload_media_v2` | action |
 | 60 | POST | `/twitter/user_login_v2` | action |
+| 61 | POST | `/twitter/block_user_v2` | action |
+| 62 | POST | `/twitter/mute_user_v2` | action |
+| 63 | POST | `/twitter/pin_tweet_v2` | action |
+| 64 | POST | `/twitter/unblock_user_v2` | action |
+| 65 | POST | `/twitter/unmute_user_v2` | action |
+| 66 | POST | `/twitter/unpin_tweet_v2` | action |
+| 67 | POST | `/twitter/unretweet_tweet_v2` | action |
 
 ## WEBHOOK + STREAM (8 endpoints: 3 GET + 5 write)
 | # | Method | Path | Category |
 |---|--------|------|----------|
-| 61 | GET | `/oapi/my/info` | other |
-| 62 | POST | `/oapi/tweet_filter/add_rule` | webhook |
-| 63 | DELETE | `/oapi/tweet_filter/delete_rule` | webhook |
-| 64 | GET | `/oapi/tweet_filter/get_rules` | webhook |
-| 65 | POST | `/oapi/tweet_filter/update_rule` | webhook |
-| 66 | POST | `/oapi/x_user_stream/add_user_to_monitor_tweet` | stream |
-| 67 | GET | `/oapi/x_user_stream/get_user_to_monitor_tweet` | stream |
-| 68 | POST | `/oapi/x_user_stream/remove_user_to_monitor_tweet` | stream |
+| 68 | GET | `/oapi/my/info` | other |
+| 69 | POST | `/oapi/tweet_filter/add_rule` | webhook |
+| 70 | DELETE | `/oapi/tweet_filter/delete_rule` | webhook |
+| 71 | GET | `/oapi/tweet_filter/get_rules` | webhook |
+| 72 | POST | `/oapi/tweet_filter/update_rule` | webhook |
+| 73 | POST | `/oapi/x_user_stream/add_user_to_monitor_tweet` | stream |
+| 74 | GET | `/oapi/x_user_stream/get_user_to_monitor_tweet` | stream |
+| 75 | POST | `/oapi/x_user_stream/remove_user_to_monitor_tweet` | stream |
