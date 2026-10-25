@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.27
+
+- Sync 23 action/media prices and the overview table with the live OpenAPI: 60 credits ($0.0006 per call), previously 200 or 300 credits.
+- Companion MCP corrects the media-upload response field from `msg` to `message`.
+
 ## 3.8.26
 
 - Add seven live V2 actions: unretweet, pin/unpin tweets, mute/unmute users, and block/unblock users, with required JSON bodies and curl examples.

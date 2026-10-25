@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 75 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.26
-  updated: "2026-10-24"
+  version: 3.8.27
+  updated: "2026-10-25"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.26
+# TwitterAPI.io skill v3.8.27
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
@@ -62,7 +62,7 @@ Never echo, print, log, or paste the key. Do not run `set -x`, `env`, or `printe
 | Check follow relationship | 100 | $0.001 |
 | Get article | 100 | $0.001 |
 | Community info | 20 | $0.0002 |
-| Write actions (tweet, like, RT, follow) | 200 | $0.002 |
+| V2 actions, DM, and media upload (per call) | 60 | $0.0006 |
 | Login V2 | 10,000 | $0.10 |
 | Legacy login (step 1 / 2FA) | 300 | $0.003 |
 

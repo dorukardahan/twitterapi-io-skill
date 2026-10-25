@@ -30,7 +30,7 @@ Important:
 
 ## Tweet Actions
 
-**Create Tweet** `POST /twitter/create_tweet_v2` (200 credits)
+**Create Tweet** `POST /twitter/create_tweet_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/create_tweet_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -44,7 +44,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/create_tweet_v2" \
 Optional: `reply_to_tweet_id`, `attachment_url` (quote tweet URL), `community_id`, `is_note_tweet` (Premium only, >280 chars), `media_ids` (array)
 Response: `{ "tweet_id": "1234...", "status": "success", "message": "..." }`
 
-**Delete Tweet** `POST /twitter/delete_tweet_v2` (200 credits)
+**Delete Tweet** `POST /twitter/delete_tweet_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/delete_tweet_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -52,7 +52,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/delete_tweet_v2" \
   -d '{ "login_cookies": "COOKIE", "tweet_id": "ID", "proxy": "PROXY" }'
 ```
 
-**Like Tweet** `POST /twitter/like_tweet_v2` (200 credits)
+**Like Tweet** `POST /twitter/like_tweet_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/like_tweet_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -60,7 +60,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/like_tweet_v2" \
   -d '{ "login_cookies": "COOKIE", "tweet_id": "ID", "proxy": "PROXY" }'
 ```
 
-**Unlike Tweet** `POST /twitter/unlike_tweet_v2` (200 credits)
+**Unlike Tweet** `POST /twitter/unlike_tweet_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/unlike_tweet_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -68,7 +68,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/unlike_tweet_v2" \
   -d '{ "login_cookies": "COOKIE", "tweet_id": "ID", "proxy": "PROXY" }'
 ```
 
-**Retweet** `POST /twitter/retweet_tweet_v2` (200 credits)
+**Retweet** `POST /twitter/retweet_tweet_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/retweet_tweet_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -78,7 +78,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/retweet_tweet_v2" \
 
 ## User Actions
 
-**Follow User** `POST /twitter/follow_user_v2` (200 credits)
+**Follow User** `POST /twitter/follow_user_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/follow_user_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -87,7 +87,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/follow_user_v2" \
 ```
 Needs numeric `user_id`. Get from `GET /twitter/user/info` first.
 
-**Unfollow User** `POST /twitter/unfollow_user_v2` (200 credits)
+**Unfollow User** `POST /twitter/unfollow_user_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/unfollow_user_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -129,7 +129,7 @@ Note: Uses `auth_session` (V1 login flow via `login_by_2fa`), not `login_cookies
 
 ## DM Actions
 
-**Send DM** `POST /twitter/send_dm_to_user` (200 credits)
+**Send DM** `POST /twitter/send_dm_to_user` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/send_dm_to_user" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -141,7 +141,7 @@ Note: Body param is `user_id` (not `receiver_id`). Can only DM users who have DM
 
 ## Media
 
-**Upload Media** `POST /twitter/upload_media_v2` (300 credits) -- **multipart/form-data**, not JSON!
+**Upload Media** `POST /twitter/upload_media_v2` (60 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/upload_media_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -154,7 +154,7 @@ Returns: `{ "media_id": "...", "status": "success" }` -- use in `create_tweet_v2
 
 ## Profile Updates (PATCH)
 
-**Update Avatar** `PATCH /twitter/update_avatar_v2` (200 credits) -- **multipart/form-data**, not JSON!
+**Update Avatar** `PATCH /twitter/update_avatar_v2` (60 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_avatar_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -164,7 +164,7 @@ curl -s -X PATCH "https://api.twitterapi.io/twitter/update_avatar_v2" \
 ```
 Image: JPG/PNG, 400x400px recommended, max 700KB. Uses binary file upload (not URL).
 
-**Update Banner** `PATCH /twitter/update_banner_v2` (200 credits) -- **multipart/form-data**, not JSON!
+**Update Banner** `PATCH /twitter/update_banner_v2` (60 credits) -- **multipart/form-data**, not JSON!
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_banner_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -174,7 +174,7 @@ curl -s -X PATCH "https://api.twitterapi.io/twitter/update_banner_v2" \
 ```
 Image: JPG/PNG, 1500x500px recommended, max 2MB. Uses binary file upload (not URL).
 
-**Update Profile** `PATCH /twitter/update_profile_v2` (200 credits)
+**Update Profile** `PATCH /twitter/update_profile_v2` (60 credits)
 ```bash
 curl -s -X PATCH "https://api.twitterapi.io/twitter/update_profile_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -194,7 +194,7 @@ Optional fields: `name` (max 50 chars), `description` (max 160 chars), `location
 
 ## Community Actions (POST, v2)
 
-**Create Community** `POST /twitter/create_community_v2` (200 credits)
+**Create Community** `POST /twitter/create_community_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/create_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" -H "Content-Type: application/json" \
@@ -202,7 +202,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/create_community_v2" \
 ```
 Body: `login_cookies` (required), `name` (required), `description` (required), `proxy` (required)
 
-**Join Community** `POST /twitter/join_community_v2` (200 credits)
+**Join Community** `POST /twitter/join_community_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/join_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -211,7 +211,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/join_community_v2" \
 ```
 Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
-**Leave Community** `POST /twitter/leave_community_v2` (200 credits)
+**Leave Community** `POST /twitter/leave_community_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/leave_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -220,7 +220,7 @@ curl -s -X POST "https://api.twitterapi.io/twitter/leave_community_v2" \
 ```
 Body: `login_cookies` (required), `community_id` (required), `proxy` (required)
 
-**Delete Community** `POST /twitter/delete_community_v2` (200 credits)
+**Delete Community** `POST /twitter/delete_community_v2` (60 credits)
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/delete_community_v2" \
   -H "X-API-Key: $TWITTERAPI_IO_KEY" \
@@ -309,9 +309,9 @@ Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
 
 ## Additional Tweet and User Actions
 
-**Block User** `POST /twitter/block_user_v2` (200 credits)
+**Block User** `POST /twitter/block_user_v2` (60 credits)
 
-Block a user. X also removes the follow relationship in both directions. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Block a user. X also removes the follow relationship in both directions. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/block_user_v2" \
@@ -321,9 +321,9 @@ curl -s -X POST "https://api.twitterapi.io/twitter/block_user_v2" \
 ```
 Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
 
-**Mute User** `POST /twitter/mute_user_v2` (200 credits)
+**Mute User** `POST /twitter/mute_user_v2` (60 credits)
 
-Mute a user. Their posts no longer appear in your timeline. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Mute a user. Their posts no longer appear in your timeline. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/mute_user_v2" \
@@ -333,9 +333,9 @@ curl -s -X POST "https://api.twitterapi.io/twitter/mute_user_v2" \
 ```
 Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
 
-**Pin Tweet** `POST /twitter/pin_tweet_v2` (200 credits)
+**Pin Tweet** `POST /twitter/pin_tweet_v2` (60 credits)
 
-Pin one of your own tweets to your profile. You can only pin tweets posted by the logged-in account. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Pin one of your own tweets to your profile. You can only pin tweets posted by the logged-in account. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/pin_tweet_v2" \
@@ -345,9 +345,9 @@ curl -s -X POST "https://api.twitterapi.io/twitter/pin_tweet_v2" \
 ```
 Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
 
-**Unblock User** `POST /twitter/unblock_user_v2` (200 credits)
+**Unblock User** `POST /twitter/unblock_user_v2` (60 credits)
 
-Unblock a user. The follow relationship removed by the block is not restored. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Unblock a user. The follow relationship removed by the block is not restored. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/unblock_user_v2" \
@@ -357,9 +357,9 @@ curl -s -X POST "https://api.twitterapi.io/twitter/unblock_user_v2" \
 ```
 Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
 
-**Unmute User** `POST /twitter/unmute_user_v2` (200 credits)
+**Unmute User** `POST /twitter/unmute_user_v2` (60 credits)
 
-Unmute a user. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Unmute a user. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/unmute_user_v2" \
@@ -369,9 +369,9 @@ curl -s -X POST "https://api.twitterapi.io/twitter/unmute_user_v2" \
 ```
 Body: `login_cookies` (required), `user_id` (required), `proxy` (required)
 
-**Unpin Tweet** `POST /twitter/unpin_tweet_v2` (200 credits)
+**Unpin Tweet** `POST /twitter/unpin_tweet_v2` (60 credits)
 
-Unpin a tweet from your profile. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Unpin a tweet from your profile. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/unpin_tweet_v2" \
@@ -381,9 +381,9 @@ curl -s -X POST "https://api.twitterapi.io/twitter/unpin_tweet_v2" \
 ```
 Body: `login_cookies` (required), `tweet_id` (required), `proxy` (required)
 
-**Unretweet Tweet** `POST /twitter/unretweet_tweet_v2` (200 credits)
+**Unretweet Tweet** `POST /twitter/unretweet_tweet_v2` (60 credits)
 
-Undo a retweet. If the account has not retweeted the tweet, X treats this as a no-op and the call still returns success. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 200 credits ($0.002 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
+Undo a retweet. If the account has not retweeted the tweet, X treats this as a no-op and the call still returns success. You must set the login_cookies. You can get the login_cookies from /twitter/user_login_v2. Price: 60 credits ($0.0006 per call). If the call fails, the response has status "error", a message with the reason returned by X, and when available x_status (the HTTP status from X) and code (X's error code).
 
 ```bash
 curl -s -X POST "https://api.twitterapi.io/twitter/unretweet_tweet_v2" \
