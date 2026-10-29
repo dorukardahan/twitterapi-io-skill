@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.28
+
+- Verify 75 active endpoints, 219 request parameters, method/category counts, and 75 curl examples against live OpenAPI and companion MCP docs.
+- Companion MCP patches runtime @hono/node-server to 2.1.5; npm 11.21.1 development tooling still bundles vulnerable undici and ip-address pending an upstream npm 11 fix.
+
 ## 3.8.27
 
 - Sync 23 action/media prices and the overview table with the live OpenAPI: 60 credits ($0.0006 per call), previously 200 or 300 credits.
