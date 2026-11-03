@@ -1,9 +1,9 @@
-# Endpoint Index (75 active endpoints)
+# Endpoint Index (76 active endpoints)
 
-Note: OpenAPI spec contains 83 total paths. Excluded from this skill: 7 V3 (offline), 1 non-Twitter (`/plants`).
-Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 40 POST/PATCH/PUT/DELETE endpoints, plus 8 `/oapi/` webhook/stream endpoints (3 GET + 5 write). The READ and WRITE tables below keep `/oapi/` grouped under WEBHOOK + STREAM, so they list the 32 non-webhook GET endpoints and 35 non-webhook write endpoints separately.
+Note: OpenAPI spec contains 84 total paths. Excluded from this skill: 7 V3 (offline), 1 non-Twitter (`/plants`).
+Counting by HTTP method from the live OpenAPI: 36 GET endpoints, 40 POST/PATCH/PUT/DELETE endpoints, plus 8 `/oapi/` webhook/stream endpoints (3 GET + 5 write). The READ and WRITE tables below keep `/oapi/` grouped under WEBHOOK + STREAM, so they list the 33 non-webhook GET endpoints and 35 non-webhook write endpoints separately.
 
-## READ (35 GET endpoints total; 32 non-webhook rows below)
+## READ (36 GET endpoints total; 33 non-webhook rows below)
 | # | Method | Path | Category |
 |---|--------|------|----------|
 | 1 | GET | `/twitter/article` | tweet |
@@ -38,54 +38,55 @@ Counting by HTTP method from the live OpenAPI: 35 GET endpoints, 40 POST/PATCH/P
 | 30 | GET | `/twitter/user/verifiedFollowers` | user |
 | 31 | GET | `/twitter/user/followers_ids` | user |
 | 32 | GET | `/twitter/user_about` | other |
+| 33 | GET | `/twitter/user/subscriptions` | user |
 
 ## WRITE (40 write endpoints total; 35 non-webhook rows below)
 | # | Method | Path | Category |
 |---|--------|------|----------|
-| 33 | POST | `/twitter/bookmark_tweet_v2` | action |
-| 34 | POST | `/twitter/bookmarks_v2` | action |
-| 35 | POST | `/twitter/create_community_v2` | community |
-| 36 | POST | `/twitter/create_tweet` | action |
-| 37 | POST | `/twitter/create_tweet_v2` | action |
-| 38 | POST | `/twitter/delete_community_v2` | community |
-| 39 | POST | `/twitter/delete_tweet_v2` | action |
-| 40 | POST | `/twitter/follow_user_v2` | action |
-| 41 | POST | `/twitter/join_community_v2` | community |
-| 42 | POST | `/twitter/leave_community_v2` | community |
-| 43 | POST | `/twitter/like_tweet` | action |
-| 44 | POST | `/twitter/like_tweet_v2` | action |
-| 45 | POST | `/twitter/list/add_member` | list |
-| 46 | POST | `/twitter/list/remove_member` | list |
-| 47 | POST | `/twitter/login_by_2fa` | action |
-| 48 | POST | `/twitter/login_by_email_or_username` | action |
-| 49 | POST | `/twitter/retweet_tweet` | action |
-| 50 | POST | `/twitter/retweet_tweet_v2` | action |
-| 51 | POST | `/twitter/send_dm_to_user` | dm |
-| 52 | POST | `/twitter/unbookmark_tweet_v2` | action |
-| 53 | POST | `/twitter/unfollow_user_v2` | action |
-| 54 | POST | `/twitter/unlike_tweet_v2` | action |
-| 55 | PATCH | `/twitter/update_avatar_v2` | action |
-| 56 | PATCH | `/twitter/update_banner_v2` | action |
-| 57 | PATCH | `/twitter/update_profile_v2` | action |
-| 58 | POST | `/twitter/upload_image` | action |
-| 59 | POST | `/twitter/upload_media_v2` | action |
-| 60 | POST | `/twitter/user_login_v2` | action |
-| 61 | POST | `/twitter/block_user_v2` | action |
-| 62 | POST | `/twitter/mute_user_v2` | action |
-| 63 | POST | `/twitter/pin_tweet_v2` | action |
-| 64 | POST | `/twitter/unblock_user_v2` | action |
-| 65 | POST | `/twitter/unmute_user_v2` | action |
-| 66 | POST | `/twitter/unpin_tweet_v2` | action |
-| 67 | POST | `/twitter/unretweet_tweet_v2` | action |
+| 34 | POST | `/twitter/bookmark_tweet_v2` | action |
+| 35 | POST | `/twitter/bookmarks_v2` | action |
+| 36 | POST | `/twitter/create_community_v2` | community |
+| 37 | POST | `/twitter/create_tweet` | action |
+| 38 | POST | `/twitter/create_tweet_v2` | action |
+| 39 | POST | `/twitter/delete_community_v2` | community |
+| 40 | POST | `/twitter/delete_tweet_v2` | action |
+| 41 | POST | `/twitter/follow_user_v2` | action |
+| 42 | POST | `/twitter/join_community_v2` | community |
+| 43 | POST | `/twitter/leave_community_v2` | community |
+| 44 | POST | `/twitter/like_tweet` | action |
+| 45 | POST | `/twitter/like_tweet_v2` | action |
+| 46 | POST | `/twitter/list/add_member` | list |
+| 47 | POST | `/twitter/list/remove_member` | list |
+| 48 | POST | `/twitter/login_by_2fa` | action |
+| 49 | POST | `/twitter/login_by_email_or_username` | action |
+| 50 | POST | `/twitter/retweet_tweet` | action |
+| 51 | POST | `/twitter/retweet_tweet_v2` | action |
+| 52 | POST | `/twitter/send_dm_to_user` | dm |
+| 53 | POST | `/twitter/unbookmark_tweet_v2` | action |
+| 54 | POST | `/twitter/unfollow_user_v2` | action |
+| 55 | POST | `/twitter/unlike_tweet_v2` | action |
+| 56 | PATCH | `/twitter/update_avatar_v2` | action |
+| 57 | PATCH | `/twitter/update_banner_v2` | action |
+| 58 | PATCH | `/twitter/update_profile_v2` | action |
+| 59 | POST | `/twitter/upload_image` | action |
+| 60 | POST | `/twitter/upload_media_v2` | action |
+| 61 | POST | `/twitter/user_login_v2` | action |
+| 62 | POST | `/twitter/block_user_v2` | action |
+| 63 | POST | `/twitter/mute_user_v2` | action |
+| 64 | POST | `/twitter/pin_tweet_v2` | action |
+| 65 | POST | `/twitter/unblock_user_v2` | action |
+| 66 | POST | `/twitter/unmute_user_v2` | action |
+| 67 | POST | `/twitter/unpin_tweet_v2` | action |
+| 68 | POST | `/twitter/unretweet_tweet_v2` | action |
 
 ## WEBHOOK + STREAM (8 endpoints: 3 GET + 5 write)
 | # | Method | Path | Category |
 |---|--------|------|----------|
-| 68 | GET | `/oapi/my/info` | other |
-| 69 | POST | `/oapi/tweet_filter/add_rule` | webhook |
-| 70 | DELETE | `/oapi/tweet_filter/delete_rule` | webhook |
-| 71 | GET | `/oapi/tweet_filter/get_rules` | webhook |
-| 72 | POST | `/oapi/tweet_filter/update_rule` | webhook |
-| 73 | POST | `/oapi/x_user_stream/add_user_to_monitor_tweet` | stream |
-| 74 | GET | `/oapi/x_user_stream/get_user_to_monitor_tweet` | stream |
-| 75 | POST | `/oapi/x_user_stream/remove_user_to_monitor_tweet` | stream |
+| 69 | GET | `/oapi/my/info` | other |
+| 70 | POST | `/oapi/tweet_filter/add_rule` | webhook |
+| 71 | DELETE | `/oapi/tweet_filter/delete_rule` | webhook |
+| 72 | GET | `/oapi/tweet_filter/get_rules` | webhook |
+| 73 | POST | `/oapi/tweet_filter/update_rule` | webhook |
+| 74 | POST | `/oapi/x_user_stream/add_user_to_monitor_tweet` | stream |
+| 75 | GET | `/oapi/x_user_stream/get_user_to_monitor_tweet` | stream |
+| 76 | POST | `/oapi/x_user_stream/remove_user_to_monitor_tweet` | stream |

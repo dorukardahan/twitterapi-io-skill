@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io public read endpoints — search tweets, get user info, timelines, mentions, replies, quotes, trends, pagination, deduplication, and analysis. This Hermes bundle is read-only by default and intentionally excludes write/login/cookie/proxy endpoint references.
 metadata:
-  version: 3.8.23
-  updated: "2026-10-20"
+  version: 3.8.29
+  updated: "2026-11-03"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.23 — Hermes read-only bundle
+# TwitterAPI.io skill v3.8.29 — Hermes read-only bundle
 
 Access public Twitter/X data via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use this Hermes bundle for read-only search, timelines, user/tweet lookup, replies, quotes, trends, pagination, deduplication, and analysis.
@@ -198,7 +198,7 @@ if dtr and len(text) <= 280:
 
 For detailed endpoint documentation with curl examples, consult the bundled reference files:
 
-- For bundled public READ endpoint documentation (31 API-key-only entries in `references/read-endpoints.md`), consult `references/read-endpoints.md`
+- For bundled public READ endpoint documentation (32 API-key-only entries in `references/read-endpoints.md`), consult `references/read-endpoints.md`
 - For the bundled public-read endpoint index, consult `references/endpoint-index.md`
 
 Write/login/cookie/proxy and webhook mutation examples are intentionally excluded from this Hermes bundle so read-only agent installs pass safety scanning. The repository root still contains the complete all-endpoints documentation for non-agent/manual review.

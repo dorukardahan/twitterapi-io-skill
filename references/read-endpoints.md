@@ -1,4 +1,4 @@
-# READ Endpoints (32 GET endpoints, mostly API key only)
+# READ Endpoints (33 GET endpoints, mostly API key only)
 
 ## Tweet Endpoints
 
@@ -63,6 +63,16 @@ curl -s "https://api.twitterapi.io/twitter/article?tweet_id=TWEETID" \
 Cost: 100 credits. Returns long-form article content from a tweet.
 
 ## User Endpoints
+
+**Get User Subscriptions** `GET /twitter/user/subscriptions`
+```bash
+curl -s "https://api.twitterapi.io/twitter/user/subscriptions?userId=USER_ID" \
+  -H "X-API-Key: $TWITTERAPI_IO_KEY"
+```
+Params: `userId` (required, numeric user ID; usernames are not accepted), `cursor` (optional).
+Returns: `{ users[], has_next_page, next_cursor, status, msg }` -- up to 20 creators the user pays to support, not the user's subscribers.
+Get the numeric ID from `GET /twitter/user/info` first. Empty subscriptions are normal; protected accounts expose only public results.
+Cost: 15 credits per creator, minimum 15 credits per request (including empty results and user-not-found responses). HTTP 502 is not charged; retry later.
 
 **Get User Info** `GET /twitter/user/info`
 ```bash

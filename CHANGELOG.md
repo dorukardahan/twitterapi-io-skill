@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.29
+
+- Add GET /twitter/user/subscriptions with required userId, optional cursor, pagination, pricing, and curl examples in the full skill and Hermes read-only bundle.
+- Sync coverage and counts to 76 active endpoints: 36 GET, 40 write, including 8 webhook/stream endpoints.
+
 ## 3.8.28
 
 - Verify 75 active endpoints, 219 request parameters, method/category counts, and 75 curl examples against live OpenAPI and companion MCP docs.

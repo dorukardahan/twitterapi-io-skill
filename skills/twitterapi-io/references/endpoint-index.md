@@ -1,4 +1,4 @@
-# Public Read Endpoint Index (31 API-key-only endpoints)
+# Public Read Endpoint Index (32 API-key-only endpoints)
 
 This bundled Hermes reference intentionally lists only public/API-key read endpoints. It excludes write/action endpoints, webhook mutations, login/cookie/proxy flows, and cookie-based DM history so agent installs remain read-only by default.
 
@@ -38,6 +38,7 @@ For complete all-endpoints documentation, use the repository root `references/` 
 | 29 | GET | `/twitter/user/verifiedFollowers` | user |
 | 30 | GET | `/twitter/user/followers_ids` | user |
 | 31 | GET | `/twitter/user_about` | other |
+| 32 | GET | `/twitter/user/subscriptions` | user |
 
 ## Excluded from the Hermes bundle
 

@@ -1,6 +1,6 @@
 # twitterapi-io-skill
 
-**Make any LLM use Twitter/X.** 75 active endpoints via [TwitterAPI.io](https://twitterapi.io) — search, post, like, retweet, follow, DM, communities, webhooks, profile management.
+**Make any LLM use Twitter/X.** 76 active endpoints via [TwitterAPI.io](https://twitterapi.io) — search, post, like, retweet, follow, DM, communities, webhooks, profile management.
 
 No Twitter developer account needed. Works with any AI assistant.
 
@@ -54,13 +54,13 @@ Then: "Read SKILL.md and search recent tweets about Bitcoin"
 
 Paste the contents of `SKILL.md` into your conversation or system prompt. The LLM will understand how to construct curl commands for any Twitter operation.
 
-## Endpoints (75 total)
+## Endpoints (76 total)
 
-Counting by HTTP method from the live OpenAPI: **35 GET**, **40 POST/PATCH/PUT/DELETE**, with **8 `/oapi/` webhook/stream endpoints** overlapping those method totals (3 GET + 5 write).
+Counting by HTTP method from the live OpenAPI: **36 GET**, **40 POST/PATCH/PUT/DELETE**, with **8 `/oapi/` webhook/stream endpoints** overlapping those method totals (3 GET + 5 write).
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| **Read** | 35 | Search, tweets, users, lists, communities, trends, spaces, account info, `/oapi/my/info`, get rules, monitored users |
+| **Read** | 36 | Search, tweets, users, lists, communities, trends, spaces, account info, `/oapi/my/info`, get rules, monitored users |
 | **Write** | 40 | Login, tweet, like, retweet, follow, profile updates, DM, media, communities, webhook rule changes, monitor user changes |
 | **Webhook + Stream** | 8 | Add/update/delete rules, monitor users |
 
