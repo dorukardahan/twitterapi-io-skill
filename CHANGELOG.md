@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.30
+
+- Verify all 76 active endpoints, required parameters, query/body placement, category counts, and 76 curl examples against live OpenAPI and companion MCP docs.
+- Companion MCP updates release-tooling npm to 11.21.2, patching bundled undici and ip-address. No high/critical audit findings remain; moderate npm-bundled glob/minimatch findings remain.
+
 ## 3.8.29
 
 - Add GET /twitter/user/subscriptions with required userId, optional cursor, pagination, pricing, and curl examples in the full skill and Hermes read-only bundle.
