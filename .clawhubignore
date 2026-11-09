@@ -1,0 +1,33 @@
+# Default deny: only reviewed skill documentation is packaged.
+/*
+!/SKILL.md
+!/README.md
+!/CHANGELOG.md
+!/LICENSE
+!/references/
+!/references/**
+!/skills/
+!/skills/**
+# Defense in depth, including inside allowed directories.
+**/memory/
+**/sessions/
+**/reports/
+**/*.private.*
+**/.env*
+**/*[Bb][Aa][Kk]*
+**/*.log
+**/*credential*
+**/*secret*
+**/*.pem
+**/*.key
+**/AGENTS.md
+**/MEMORY.md
+**/USER.md
+**/SOUL.md
+**/IDENTITY.md
+**/TOOLS.md
+**/HEARTBEAT.md
+**/*-LESSONS.md
+**/*_RULES.md
+**/*-session.md
+**/*-log.json
