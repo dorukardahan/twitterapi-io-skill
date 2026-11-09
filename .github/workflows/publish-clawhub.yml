@@ -1,0 +1,65 @@
+name: Owner-approved ClawHub release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install reviewed tooling
+        run: |
+          bash scripts/security/install-gitleaks.sh "$RUNNER_TEMP/guard-bin"
+          echo "$RUNNER_TEMP/guard-bin" >> "$GITHUB_PATH"
+          npm ci --prefix scripts/security/clawhub-cli --ignore-scripts
+      - name: Test and prepare before owner approval
+        run: |
+          export CLAWHUB_CLI_ROOT="$PWD/scripts/security/clawhub-cli/node_modules/clawhub"
+          node --test scripts/check-clawhub-package.test.mjs
+          python3 scripts/security/test_guards.py
+          python3 scripts/security/release.py prepare --package twitterapi-io --output "$RUNNER_TEMP/checked-skill" --clawhub-root "$CLAWHUB_CLI_ROOT"
+          cat "$RUNNER_TEMP/checked-skill/manifest.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checked-skill
+          path: ${{ runner.temp }}/checked-skill/
+          retention-days: 7
+  publish:
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: owner-approved-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install reviewed tooling
+        run: |
+          bash scripts/security/install-gitleaks.sh "$RUNNER_TEMP/guard-bin"
+          echo "$RUNNER_TEMP/guard-bin" >> "$GITHUB_PATH"
+          npm ci --prefix scripts/security/clawhub-cli --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: checked-skill
+          path: ${{ runner.temp }}/checked-skill
+      - name: Upload exact approved artifact
+        env:
+          RELEASE_APPROVED_ENVIRONMENT: owner-approved-release
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+          CLAWHUB_CONFIG_PATH: ${{ runner.temp }}/clawhub-auth.json
+        run: |
+          python3 - <<'PYAUTH'
+          import json, os, pathlib
+          token = os.environ['CLAWHUB_TOKEN']
+          if not token:
+              raise SystemExit('Missing protected-environment credential')
+          target = pathlib.Path(os.environ['CLAWHUB_CONFIG_PATH'])
+          target.write_text(json.dumps({'registry': 'https://clawhub.ai', 'token': token}))
+          target.chmod(0o600)
+          PYAUTH
+          trap 'rm -f "$CLAWHUB_CONFIG_PATH"' EXIT
+          python3 scripts/security/release.py publish --package twitterapi-io --output "$RUNNER_TEMP/checked-skill" --clawhub-root "$PWD/scripts/security/clawhub-cli/node_modules/clawhub"

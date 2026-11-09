@@ -1,0 +1,21 @@
+{
+  "twitterapi-io": {
+    "repository": "dorukardahan/twitterapi-io-skill",
+    "registry": "clawhub",
+    "automatic": false,
+    "path": ".",
+    "files": [
+      "CHANGELOG.md",
+      "LICENSE",
+      "README.md",
+      "SKILL.md",
+      "references/endpoint-index.md",
+      "references/read-endpoints.md",
+      "references/webhook-stream-endpoints.md",
+      "references/write-endpoints.md",
+      "skills/twitterapi-io/SKILL.md",
+      "skills/twitterapi-io/references/endpoint-index.md",
+      "skills/twitterapi-io/references/read-endpoints.md"
+    ]
+  }
+}

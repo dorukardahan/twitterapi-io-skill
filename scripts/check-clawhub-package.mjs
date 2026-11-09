@@ -14,7 +14,7 @@ export function allowed(path) {
     /^(?:references|skills)\/.+\.(?:md|txt)$/i.test(path);
 }
 
-export async function check(folder, cliRoot, slug = 'twitterapi-io') {
+export async function check(folder, cliRoot, slug = 'twitterapi-io', offline = false) {
   folder = resolve(folder); cliRoot = resolve(cliRoot);
   const pkg = JSON.parse(await readFile(join(cliRoot, 'package.json'), 'utf8'));
   if (pkg.name !== 'clawhub' || pkg.version !== '0.25.1') throw Error('Unreviewed CLI version; review packer and re-run tests.');
@@ -31,6 +31,7 @@ export async function check(folder, cliRoot, slug = 'twitterapi-io') {
     }
   }
   const before = hashSkillFiles(files);
+  if (offline) return { ok: true, cliVersion: pkg.version, dryRun: { status: 'offline-packer', fileCount: files.length, fingerprint: before.fingerprint }, files: before.files };
   const output = execFileSync(process.execPath, [join(cliRoot, 'bin/clawdhub.js'), 'skill', 'publish', folder,
     '--slug', slug, '--owner', 'dorukardahan', '--dry-run', '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const dryRun = JSON.parse(output);
@@ -43,8 +44,8 @@ export async function check(folder, cliRoot, slug = 'twitterapi-io') {
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
   try {
-    if (process.argv.length !== 4) throw Error('Usage: node scripts/check-clawhub-package.mjs <folder> <clawhub-package-root>');
-    console.log(JSON.stringify(await check(process.argv[2], process.argv[3]), null, 2));
+    if (![4, 5].includes(process.argv.length) || (process.argv[4] && process.argv[4] !== '--offline')) throw Error('Usage: node scripts/check-clawhub-package.mjs <folder> <clawhub-package-root>');
+    console.log(JSON.stringify(await check(process.argv[2], process.argv[3], 'twitterapi-io', process.argv[4] === '--offline'), null, 2));
   } catch (error) {
     // Never echo CLI output or file contents on a failure.
     console.error(error.status !== undefined ? 'ClawHub dry-run failed; no upload performed.' : error.message);
