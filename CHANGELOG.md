@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.31
+
+- Document the live OpenAPI media-upload `processing_state` response and the 30–60 second wait for videos still processing on X.
+- Verify 76 active endpoints, 221 request parameters, and 76 curl examples against the live OpenAPI; no endpoint or request parameter changes.
+
 ## 3.8.30
 
 - Verify all 76 active endpoints, required parameters, query/body placement, category counts, and 76 curl examples against live OpenAPI and companion MCP docs.

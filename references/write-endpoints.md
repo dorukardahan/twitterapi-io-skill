@@ -150,7 +150,8 @@ curl -s -X POST "https://api.twitterapi.io/twitter/upload_media_v2" \
   -F "proxy=PROXY"
 ```
 Optional: `is_long_video` (boolean, Premium only -- videos >2:20)
-Returns: `{ "media_id": "...", "status": "success" }` -- use in `create_tweet_v2`'s `media_ids` array.
+Returns: `{ "media_id": "...", "status": "success", "message": "..." }` -- use in `create_tweet_v2`'s `media_ids` array.
+For long videos still processing on X after about 90 seconds, a successful response also includes `processing_state` (`pending` or `in_progress`). Wait 30–60 seconds before attaching that `media_id` to a tweet; upload success does not mean video processing has finished.
 
 ## Profile Updates (PATCH)
 

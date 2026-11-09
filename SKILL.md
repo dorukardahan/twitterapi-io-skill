@@ -2,12 +2,12 @@
 name: twitterapi-io
 description: Interact with Twitter/X via TwitterAPI.io — search tweets, get user info, post tweets, like, retweet, follow, send DMs, and more. Covers all 76 active endpoints. Use when the user wants to read or write Twitter data.
 metadata:
-  version: 3.8.30
-  updated: "2026-11-06"
+  version: 3.8.31
+  updated: "2026-11-09"
   author: dorukardahan
 ---
 
-# TwitterAPI.io skill v3.8.30
+# TwitterAPI.io skill v3.8.31
 
 Access Twitter/X data and perform actions via [TwitterAPI.io](https://twitterapi.io) REST API.
 Use TwitterAPI.io REST API for read, write, webhook, and stream operations.
