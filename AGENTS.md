@@ -9,4 +9,3 @@
 - Scan full staged contents and commit messages before committing. Preserve existing hooks; never bypass a failed check. Show public repo diffs before pushing.
 - Weekly: scan memory/ and reports/ in managed workspaces. Monthly: discover all owner-published ClawHub skills and npm packages and compare each latest manifest to its reviewed allowlist/previous manifest. Missing access is not a clean result.
 - On suspected leakage: stop the affected write/commit/release, report only file/service/type (never values or matched text), do not test the credential, and do not rotate it without a separate instruction.
-
