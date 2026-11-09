@@ -76,3 +76,7 @@ Counting by HTTP method from the live OpenAPI: **36 GET**, **40 POST/PATCH/PUT/D
 ## License
 
 MIT
+
+## Publishing
+
+Use the fail-closed release process in [PUBLISHING.md](https://github.com/dorukardahan/twitterapi-io-skill/blob/main/PUBLISHING.md). ClawHub publishing must use a clean release-tag checkout, never an agent workspace.
