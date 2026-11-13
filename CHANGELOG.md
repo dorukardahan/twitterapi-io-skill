@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.8.32
+
+- Verify all 76 active endpoints, required parameters, query/body placement, category counts, and 76 curl examples against live OpenAPI and companion MCP docs.
+- Companion MCP patches Hono to 4.13.18 and @hono/node-server to 2.1.8; npm audit reports zero vulnerabilities.
+
 ## 3.8.31
 
 - Document the live OpenAPI media-upload `processing_state` response and the 30–60 second wait for videos still processing on X.
